@@ -95,9 +95,10 @@ function customer_data($code) {
       $no = tr($r[0]); $so = tr($r[6]);
       if (!isset($sj[$no])) $sj[$no] = array('date' => d10($r[1]), 'delivered' => (int)$r[2] ? 1 : 0, 'delivered_date' => d10($r[3]), 'invoice' => tr($r[4]),
         'settled' => (int)$r[5] ? 1 : 0, 'shipped_date' => null, 'by_so' => array(), 'amount' => 0.0);
-      if (!isset($sj[$no]['by_so'][$so])) $sj[$no]['by_so'][$so] = array('rolls' => 0, 'meters' => 0.0);
+      if (!isset($sj[$no]['by_so'][$so])) $sj[$no]['by_so'][$so] = array('rolls' => 0, 'meters' => 0.0, 'lines' => array());
       $sj[$no]['by_so'][$so]['rolls'] += (int)$r[9];
       $sj[$no]['by_so'][$so]['meters'] += (float)$r[10];
+      $sj[$no]['by_so'][$so]['lines'][] = array('art' => tr($r[7]), 'color' => tr($r[8]), 'rolls' => (int)$r[9], 'meters' => round((float)$r[10], 2));
       foreach ($orders[$so]['lines'] as $i => $line)
         if ($line['art'] === tr($r[7]) && $line['color'] === tr($r[8])) { $orders[$so]['lines'][$i]['on_sj'] += (int)$r[9]; break; }
     }
@@ -121,7 +122,8 @@ function customer_data($code) {
     $list = array(); $open = array();
     foreach ($sj as $no => $s) if (isset($s['by_so'][$so])) {
       $item = array('sj' => $no, 'date' => $s['date'], 'delivered' => $s['delivered'], 'delivered_date' => $s['delivered_date'],
-        'shipped_date' => $s['shipped_date'], 'rolls' => $s['by_so'][$so]['rolls'], 'meters' => round($s['by_so'][$so]['meters'], 2));
+        'shipped_date' => $s['shipped_date'], 'rolls' => $s['by_so'][$so]['rolls'], 'meters' => round($s['by_so'][$so]['meters'], 2),
+        'lines' => $s['by_so'][$so]['lines']);
       $list[] = $item;
       if (!$s['delivered']) $open[] = $item;
     }
@@ -146,6 +148,9 @@ function customer_data($code) {
       $m = $line['rolls'] * $l['roll_m'];
       $o['lines'][$i] += array('name' => $l['name'], 'color_name' => $l['color_name'], 'meters' => round($m, 2));
       $rolls += $line['rolls']; $meters += $m; $items[$l['name'] . ' ' . $l['color_name']] = true;
+    }
+    foreach ($list as $j => $item) foreach ($item['lines'] as $k => $l) {
+      $lb = label_for($names, $l['art'], $l['color']); $list[$j]['lines'][$k] += array('name' => $lb['name'], 'color_name' => $lb['color_name']);
     }
     $orders[$so] = array('no' => $so, 'date' => $o['date'], 'note' => $o['note'], 'top' => $o['top'], 'status' => $status, 'status_date' => $when,
       'history' => $hist, 'rolls' => $rolls, 'meters' => round($meters, 2), 'items' => implode(', ', array_keys($items)), 'rolls_to_come' => $to_come,

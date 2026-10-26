@@ -235,7 +235,7 @@ tr.clickable:hover td{background:color-mix(in srgb,var(--bg) 60%,transparent)}
 .timeline b{display:block;font-weight:600}
 .timeline span{color:var(--muted);font-size:.78rem}
 @media (max-width:640px){
-  .timeline,.timeline.t4{grid-template-columns:1fr;gap:14px}
+  .timeline,.timeline.t4,.timeline.t3{grid-template-columns:1fr;gap:14px}
   .timeline li{padding-top:0;padding-left:30px}
   .timeline li::before{top:20px;bottom:-16px;left:8px;right:auto;width:2px;height:auto}
   .timeline li:last-child::before{display:none}
@@ -323,6 +323,18 @@ details.older>summary{padding-bottom:16px}
 details.older[open]>summary{padding-bottom:0}
 .timeline li.part::before{background:linear-gradient(90deg,var(--accent),var(--line))}
 .timeline li.part .d{border-color:var(--accent);background:linear-gradient(90deg,var(--accent) 50%,var(--surface) 50%)}
+
+/* shipments: one card per delivery note (SJ) */
+.ships{display:grid;gap:12px;margin-top:14px}
+.ship{border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;display:grid;gap:14px}
+.ship-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ship-h b{display:block;font-size:1.05rem;margin-top:2px}
+.ship-h small{display:block;color:var(--muted);font-size:.8rem;margin-top:2px}
+.timeline.t3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ship-l{list-style:none;margin:0;padding:10px 0 0;border-top:1px solid var(--line);display:grid;gap:6px;font-size:.86rem}
+.ship-l li{display:flex;justify-content:space-between;gap:10px}
+.ship-l li>span:last-child{white-space:nowrap;color:var(--muted)}
+.sjlist{font-size:.74rem;margin-top:2px}
 /* brand mark: company logo */
 .mark{background:url(data:image/png;base64,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) center/contain no-repeat!important;border-radius:0!important;font-size:0!important;color:transparent!important;outline:0!important;box-shadow:none!important}
 .mark::after{display:none!important}
@@ -353,7 +365,7 @@ const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','De
 const dt=v=>{if(!v)return '';const [y,m,d]=String(v).slice(0,10).split('-');return `${+d} ${MON[+m-1]} ${y}`};
 const STEPS=['Order Received','Order Processed','Shipped','Delivered'];
 const PILL={'Order Received':'p-neutral','Order Processed':'p-info','Shipped':'p-accent','Delivered':'p-good','Partly delivered':'p-warn',
- 'Sent':'p-warn','Received by our team':'p-info','SO created':'p-good','Cannot fulfil':'p-bad'};
+ 'Being prepared':'p-info','Sent':'p-warn','Received by our team':'p-info','SO created':'p-good','Cannot fulfil':'p-bad'};
 const pill=t=>`<span class="pill ${PILL[t]||'p-neutral'}">${esc(t)}</span>`;
 const stockPill=p=>p.stock==='in'?`<span class="pill p-good">In stock</span>`:`<span class="pill p-neutral">Out of stock</span>`;
 
@@ -521,15 +533,16 @@ async function render(){
 
 /* ---------------- my orders ---------------- */
 function orderRow(o){
- return `<button class="row" data-open-order="${esc(o.no)}">
-  <div><div class="t mono">${esc(o.no)}</div><div class="s">${dt(o.date)} · ${rolls(o.rolls)}</div></div>
+ const sjs=o.sj_numbers||[];
+ return `<button class="row" data-open-order="${esc(o.no)}" data-key="${esc((o.no+' '+sjs.join(' ')+' '+o.items).toLowerCase())}">
+  <div><div class="t mono">${esc(o.no)}</div><div class="s">${dt(o.date)} · ${rolls(o.rolls)}</div>${sjs.length?`<div class="s mono sjlist">SJ ${sjs.map(esc).join(', ')}</div>`:''}</div>
   <div class="hide-sm"><div class="s">${esc(o.items)}</div></div>
   <div class="amt hide-sm">${o.status_date&&o.status!=='Order Received'?dt(o.status_date):''}</div>
   <div>${pill(o.status)}</div></button>`;
 }
 function reqRow(r){
  const n=r.data.items.reduce((a,x)=>a+x.rolls,0);
- return `<button class="row" data-open-req="${r.id}">
+ return `<button class="row" data-open-req="${r.id}" data-key="${esc((r.ref+' '+(r.so_number||'')+' '+(r.data.po||'')+' '+r.data.items.map(i=>i.name+' '+i.color_name).join(' ')).toLowerCase())}">
   <div><div class="t mono">${esc(r.ref)}</div><div class="s">Sent ${dt(r.created_at)} · ${rolls(n)}</div></div>
   <div class="hide-sm"><div class="s">${esc(r.data.items.map(i=>i.name+' '+i.color_name).join(', '))}</div></div>
   <div class="amt hide-sm mono">${esc(r.so_number||'')}</div>
@@ -541,30 +554,45 @@ async function ordersView(){
  const waiting=d.requests.filter(r=>r.status!=='SO created'&&r.status!=='Cannot fulfil');
  const fold=(h,n,body,key)=>`<details class="panel older" data-fold="${key}" ${S.folds&&S.folds[key]?'open':''}><summary class="panel-h"><h2>${h}</h2><span class="muted">${n} <svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary><div class="rows" style="margin-top:10px">${body}</div></details>`;
  const sec=(h,list,row,empty)=>`<section class="panel"><div class="panel-h"><h2>${h}</h2><span class="muted">${list.length}</span></div><div class="rows" style="margin-top:10px">${list.length?list.map(row).join(''):`<div class="empty">${empty}</div>`}</div></section>`;
- return `<div class="pagehead"><div><h1>My orders</h1><p class="muted">Order Received → Order Processed → Shipped → Delivered. Delivered orders move to Past orders. Tap an order to see its deliveries.</p></div></div>
+ return `<div class="pagehead"><div><h1>My orders</h1><p class="muted">Order Received → Order Processed → Shipped → Delivered. Delivered orders move to Past orders. Tap an order to see its shipments.</p></div></div>
+ <input class="inp search" id="oq" type="search" placeholder="Find an SO, SJ, PO or product" aria-label="Find an order" style="max-width:420px">
+ <p class="empty panel" id="onone" hidden>No order matches that number.</p>
  ${waiting.length?sec('Requests waiting for a sales order',waiting,reqRow,''):''}
  ${sec('In progress',onway,orderRow,'Nothing in progress right now.')}
  ${done.length?fold('Past orders',done.length,done.map(orderRow).join(''),'past'):''}
  ${d.requests.length>waiting.length?fold('Earlier requests',d.requests.length-waiting.length,d.requests.filter(r=>!waiting.includes(r)).map(reqRow).join(''),'reqs'):''}`;
 }
+// One delivery note (SJ) = one shipment, tracked on its own: Prepared -> Shipped -> Delivered.
+function shipCard(x,i,n){
+ const st=x.delivered?'Delivered':x.shipped_date?'Shipped':'Being prepared';
+ const k=x.delivered?2:x.shipped_date?1:0;
+ const steps=[['Prepared',x.date],['Shipped',x.shipped_date],['Delivered',x.delivered?x.delivered_date:null]];
+ return `<article class="ship" id="sj-${esc(x.sj)}">
+  <div class="ship-h"><div><span class="eyebrow">Shipment ${i+1}${n>1?' of '+n:''}</span><b class="mono">${esc(x.sj)}</b><small>${rolls(x.rolls)} · ${num(x.meters)} m</small></div>${pill(st)}</div>
+  <ol class="timeline t3">${steps.map(([t,d],j)=>`<li class="${j<=k?'done':''} ${j===k?'now':''}"><span class="d"></span><b>${t}</b><span>${d?dt(d):(j<=k?'Done':'Pending')}</span></li>`).join('')}</ol>
+  ${(x.lines||[]).length?`<ul class="ship-l">${x.lines.map(l=>`<li><span>${esc(l.name)} ${esc(l.color_name)} <span class="mono muted">${esc(l.art)}·${esc(l.color)}</span></span><span>${rolls(l.rolls)}${l.meters?' · '+num(l.meters)+' m':''}</span></li>`).join('')}</ul>`:''}
+ </article>`;
+}
 async function detailView(no){
  const o=(await api('order&no='+encodeURIComponent(no))).order;
  // Partly delivered: the steps up to Shipped are done, Delivered is only half reached.
- const part=o.status==='Partly delivered';
- const idx=part?2:STEPS.indexOf(o.status);
+ // Some rolls delivered but not all (one shipment arrived, another still on the way): Delivered is only half reached.
  const got=o.sjs.filter(x=>x.delivered).reduce((a,x)=>a+x.rolls,0);
+ const part=o.status!=='Delivered'&&got>0;
+ const idx=o.status==='Partly delivered'?2:STEPS.indexOf(o.status);
  const when=[o.history.received,o.history.processed,o.history.shipped,o.history.delivered];
  return `<div><button class="back" data-go="orders">${ic('left')}My orders</button>
   <div class="pagehead"><div><h1>${esc(o.no)}</h1><p class="muted">Ordered ${dt(o.date)} · ${rolls(o.rolls)} · ${num(o.meters)} m</p></div>${pill(o.status)}</div></div>
- <section class="panel"><div class="panel-b"><ol class="timeline t4">${STEPS.map((t,i)=>part&&i===3?`<li class="part now"><span class="d"></span><b>Partly delivered</b><span>${got} of ${rolls(o.rolls)}${when[3]?' · '+dt(when[3]):''}</span></li>`:`<li class="${i<=idx?'done':''} ${i===idx&&!part?'now':''}"><span class="d"></span><b>${t}</b><span>${when[i]?dt(when[i]):(i<=idx?'Done':'Pending')}</span></li>`).join('')}</ol>
+ <section class="panel"><div class="panel-b"><ol class="timeline t4">${STEPS.map((t,i)=>part&&i===3?`<li class="part now"><span class="d"></span><b>Partly delivered</b><span>${got} of ${rolls(o.rolls)}${when[3]?' · '+dt(when[3]):''}</span></li>`:`<li class="${i<=idx?'done':''} ${i===idx&&!part?'now':''}"><span class="d"></span><b>${t}</b><span>${i<=idx&&when[i]?dt(when[i]):(i<=idx?'Done':'Pending')}</span></li>`).join('')}</ol>
   ${o.status==='Partly delivered'?`<p class="note" style="margin-top:14px">${rolls(o.rolls_to_come)} still to come on a next delivery.</p>`:''}</div></section>
  <section class="panel"><div class="panel-h"><h2>Products</h2></div><div class="tbl" style="margin-top:8px"><table>
   <thead><tr><th>Product</th><th class="r">Rolls</th><th class="r hide-sm">Sent</th><th class="r">Meters</th></tr></thead>
   <tbody>${o.lines.map(l=>`<tr><td>${esc(l.name)} ${esc(l.color_name)} <span class="mono muted">${esc(l.art)}·${esc(l.color)}</span></td><td class="r">${l.rolls}</td><td class="r hide-sm">${l.on_sj}</td><td class="r">${l.meters?num(l.meters)+' m':''}</td></tr>`).join('')}</tbody>
  </table></div></section>
- <section class="panel"><div class="panel-b"><h2 style="margin-bottom:12px">Deliveries</h2>
-  ${o.sjs.length?`<div style="display:grid;gap:12px">${o.sjs.map(x=>`<dl class="kv"><dt>Delivery note</dt><dd class="mono">${esc(x.sj)}</dd><dt>Rolls</dt><dd>${x.rolls} · ${num(x.meters)} m</dd><dt>Status</dt><dd>${x.delivered?'<b>Delivered</b> '+dt(x.delivered_date):x.shipped_date?'<b>On the way</b> since '+dt(x.shipped_date):'Being prepared since '+dt(x.date)}</dd></dl>`).join('<hr style="border:0;border-top:1px solid var(--line);margin:0">')}</div>`
-   :'<p class="muted">We have your order. The delivery note is made when your rolls are prepared.</p>'}
+ <section class="panel"><div class="panel-b"><h2>Shipments${o.sjs.length?` <span class="muted" style="font-weight:400">· ${o.sjs.length} delivery note${o.sjs.length===1?'':'s'}</span>`:''}</h2>
+  ${o.sjs.length?`<div class="ships">${o.sjs.map((x,i)=>shipCard(x,i,o.sjs.length)).join('')}</div>`
+   :'<p class="muted" style="margin-top:10px">We have your order. A delivery note (SJ) is made when your rolls are prepared; it shows here with its own tracking.</p>'}
+  ${o.rolls_to_come>0&&o.sjs.length?`<p class="note" style="margin-top:14px">${rolls(o.rolls_to_come)} not on a delivery note yet. They will come on a next shipment.</p>`:''}
   <p class="note" style="margin-top:14px">Questions? Email ${esc(S.contact.email)} or call ${esc(S.contact.phone)} and mention ${esc(o.no)}.</p>
  </div></section>`;
 }
@@ -613,6 +641,14 @@ document.addEventListener('submit',async e=>{
   if(id)err(id,ex.message);else toast(ex.message);
  }finally{if(btn)btn.disabled=false}
 });
+// My orders: find by SO, SJ, PO or product. Opens closed sections that hold a match.
+function findOrders(v){
+ const q=v.trim().toLowerCase();let hits=0;
+ document.querySelectorAll('#content .rows .row[data-key]').forEach(r=>{const ok=!q||r.dataset.key.includes(q);r.hidden=!ok;if(ok)hits++});
+ document.querySelectorAll('#content section.panel, #content details.older').forEach(p=>{const rows=p.querySelectorAll('.row[data-key]');if(!rows.length)return;
+  const any=[...rows].some(r=>!r.hidden);p.hidden=!!q&&!any;if(q&&any&&p.tagName==='DETAILS')p.open=true});
+ $('#onone').hidden=!q||hits>0;
+}
 function setQty(k,v){
  const n=Math.max(0,Math.min(999,parseInt(v,10)||0));
  if(n)S.cart[k]=n;else delete S.cart[k];saveCart();
@@ -627,6 +663,7 @@ function refreshSummary(){ // redraw the order summary, keeping what was typed i
 }
 document.addEventListener('input',e=>{
  if(e.target.id==='q'){S.q=e.target.value;$('#plist').innerHTML=productCards();return}
+ if(e.target.id==='oq'){findOrders(e.target.value);return}
  const k=e.target.dataset&&e.target.dataset.qty;if(!k)return;
  setQty(k,e.target.value);
  if(e.target.closest('#plist')){e.target.closest('.crow').classList.toggle('picked',!!S.cart[k]);refreshSummary()}

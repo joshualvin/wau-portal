@@ -62,14 +62,16 @@ function need_user($allow_must_change = false) {
 // Order status for the customer: only what they need to follow delivery.
 function order_summary($o) {
   return array('no' => $o['no'], 'date' => $o['date'], 'status' => $o['status'], 'status_date' => $o['status_date'],
-    'rolls' => $o['rolls'], 'meters' => $o['meters'], 'items' => $o['items'], 'rolls_to_come' => $o['rolls_to_come']);
+    'rolls' => $o['rolls'], 'meters' => $o['meters'], 'items' => $o['items'], 'rolls_to_come' => $o['rolls_to_come'],
+    'sj_numbers' => array_map(function ($s) { return $s['sj']; }, $o['sjs']));
 }
 function order_detail($o) {
   $d = order_summary($o); $d['history'] = $o['history'];
   $d['lines'] = array(); foreach ($o['lines'] as $l) $d['lines'][] = array('art' => $l['art'], 'color' => $l['color'], 'name' => $l['name'],
     'color_name' => $l['color_name'], 'rolls' => $l['rolls'], 'meters' => $l['meters'], 'on_sj' => $l['on_sj']);
   $d['sjs'] = array(); foreach ($o['sjs'] as $s) $d['sjs'][] = array('sj' => $s['sj'], 'date' => $s['date'], 'shipped_date' => $s['shipped_date'],
-    'delivered' => $s['delivered'], 'delivered_date' => $s['delivered_date'], 'rolls' => $s['rolls'], 'meters' => $s['meters']);
+    'delivered' => $s['delivered'], 'delivered_date' => $s['delivered_date'], 'rolls' => $s['rolls'], 'meters' => $s['meters'],
+    'lines' => array_map(function ($l) { return array('art' => $l['art'], 'color' => $l['color'], 'name' => $l['name'], 'color_name' => $l['color_name'], 'rolls' => $l['rolls'], 'meters' => $l['meters']); }, $s['lines']));
   return $d;
 }
 // The customer's order requests of the last 90 days, with what our staff set on the staff page.
