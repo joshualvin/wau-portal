@@ -125,7 +125,7 @@ details summary{cursor:pointer;color:var(--accent);font-weight:600}.login{max-wi
   <?php if ($reveal): ?><div class="reveal">
     <b>Temporary password for <?= h($reveal[0]) ?></b>
     <code><?= h($reveal[1]) ?></code>
-    <span>Give it to the customer by phone or in person. It is shown only once. They choose their own password when they first sign in at <b>wautama.com/account</b>.</span>
+    <span>Give it to the customer by phone or in person. It is shown only once. They choose their own password when they first sign in at <b>portal.wautama.com</b>.</span>
   </div><?php endif; ?>
 
 <?php if ($tab === 'accounts'):
@@ -153,7 +153,7 @@ details summary{cursor:pointer;color:var(--accent);font-weight:600}.login{max-wi
   $reqs = $pdo->query('SELECT r.*, s.status, s.so_number, s.note, s.updated_at, s.updated_by FROM ' . E('portal_requests') . ' r LEFT JOIN ' . E('portal_request_status') . ' s ON s.request_id = r.id ORDER BY r.id DESC LIMIT 200')->fetchAll();
   $arts = array(); foreach ($reqs as $r) { $p = json_decode($r['payload'], true); if ($r['kind'] === 'order') { foreach ($p['items'] as $it) $arts[] = $it['art']; } else $arts[] = $p['art']; }
   $names = $arts ? article_names($arts) : array(); ?>
-  <section class="panel"><h2>Order and return requests</h2>
+  <section class="panel"><h2>Order requests</h2>
   <p class="muted" style="margin-top:0">Requests are saved in wau_erp (table portal_requests). Set a status here so the customer can follow it.</p>
   <div class="tbl"><table><tr><th>Request</th><th>Customer</th><th>Details</th><th>Status</th><th>Update</th></tr>
   <?php foreach ($reqs as $r): $p = json_decode($r['payload'], true); $isOrder = $r['kind'] === 'order';
