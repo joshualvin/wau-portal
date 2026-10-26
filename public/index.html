@@ -309,6 +309,8 @@ details.older[open]>summary{padding-bottom:0}
 .timeline li.part .d{border-color:var(--accent);background:linear-gradient(90deg,var(--accent) 50%,var(--surface) 50%)}
 
 /* shop: one card per article, its colors as swatches; the cart opens in a side drawer, checkout is its own page */
+.content.wide,.tabs>div{max-width:none} /* tabs stay at the left edge on every page, like the header */
+@media (min-width:861px){.tabs>div{padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}} /* tabs line up with the page edge */
 .shop-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px 24px}
 .shop-head p{margin-top:4px}
 .shop-head .filters{flex:0 1 440px;flex-wrap:nowrap}
@@ -488,6 +490,7 @@ function passwordView(first){
 const cartLabel=()=>{const n=cartLines().length;return `Cart, ${n} product${n===1?'':'s'}`};
 const cartbarHtml=()=>`<div class="cartbar"><span><b>${rolls(cartRolls())}</b> in your cart</span><button class="btn btn-primary" data-act="cart">View cart</button></div>`;
 function shell(inner){
+ const wide=S.view==='order'?' wide':''; // the product grid uses the whole window; reading pages keep a comfortable width
  return `<div class="main">
   <header class="top">
    <div class="brandrow"><span class="mark">WAU</span><span><b style="font-size:.95rem">${esc(S.me.company)}</b><small>${esc(S.me.name||S.me.email)}</small></span></div>
@@ -501,7 +504,7 @@ function shell(inner){
    <button data-go="order" ${['order','checkout','sent'].includes(S.view)?'aria-current="page"':''}>${ic('plus')}New order</button>
    <button data-go="orders" ${['orders','detail','request'].includes(S.view)?'aria-current="page"':''}>${ic('box')}My orders</button>
   </div></nav>
-  <main class="content" id="content" style="margin:0 auto">${inner}</main>
+  <main class="content${wide}" id="content" style="margin:0 auto">${inner}</main>
  </div>
  ${S.view==='order'&&cartLines().length?cartbarHtml():''}`;
 }
