@@ -203,13 +203,12 @@ function catalog_for($code) {
       array($code, date('Y-m-d', strtotime('-24 months')))) as $r) $wanted[tr($r[0]) . '|' . tr($r[1])] = true;
   $arts = array(); foreach (array_keys($wanted) as $key) { $p = explode('|', $key, 2); $arts[] = $p[0]; }
   $names = cached('articles2_' . md5(implode(',', array_unique($arts))), 600, function () use ($arts) { return article_names($arts); });
-  $low = (int)cfgv('low_rolls', 3); $show_rolls = (bool)cfgv('show_stock_rolls', false);
   $list = array();
   foreach ($names as $key => $n) {
     if (!isset($wanted[$key])) continue;
     $p = explode('|', $key, 2); $rolls = isset($free[$key]) ? $free[$key] : 0;
     $list[$key] = array('art' => $p[0], 'color' => $p[1], 'name' => $n['name'], 'color_name' => $n['color_name'], 'roll_m' => $n['roll_m'],
-      'stock' => $rolls <= 0 ? 'out' : ($rolls <= $low ? 'low' : 'in'), 'rolls' => $show_rolls ? $rolls : null);
+      'stock' => $rolls > 0 ? 'in' : 'out'); // only in or out: stock quantities are never sent to customers
   }
   uasort($list, 'product_by_name');
   return $memo[$code] = $list;

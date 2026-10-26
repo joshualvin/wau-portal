@@ -17,8 +17,6 @@ return array(
   ),
 
   // ---- What customers see ----
-  'show_stock_rolls'     => false,   // true = show free rolls next to In stock
-  'low_rolls'   => 3,                // free rolls at or below this show as Limited
   'ignore_warehouses' => array('GU001'),
   'stock_cache_seconds' => 120,      // free stock is read again at most this often
   'contact_email' => 'sales@wautama.com',

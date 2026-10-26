@@ -328,7 +328,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=n=>Number(n||0).toLocaleString('id-ID',{maximumFractionDigits:1});
 const rolls=n=>n+(n===1?' roll':' rolls');
-const stockPill=p=>p.stock==='in'?`<span class="pill p-good">In stock${p.rolls!=null?' · '+p.rolls:''}</span>`:p.stock==='low'?`<span class="pill p-warn">Limited${p.rolls!=null?' · '+p.rolls:''}</span>`:`<span class="pill p-neutral">Ask our team</span>`;
+const stockPill=p=>p.stock==='in'?`<span class="pill p-good">In stock</span>`:`<span class="pill p-neutral">Out of stock</span>`;
 
 const S={me:null,csrf:'',view:'order',products:null,cart:{},q:'',stockOnly:false,sent:null,open:new Set()};
 try{S.cart=JSON.parse(localStorage.getItem('wau.cart')||'{}')||{}}catch(_){S.cart={}}
@@ -418,10 +418,9 @@ function productCards(){
   const colors=(q&&!g.artHit)?g.hits:g.all;
   const open=S.open.has(g.art)||(q&&!g.artHit);
   const inCart=g.all.reduce((a,p)=>a+(S.cart[p.art+'|'+p.color]||0),0);
-  const inStock=g.all.filter(p=>p.stock!=='out').length;
   return `<article class="art${open?' open':''}">
    <button class="art-h" data-art="${esc(g.art)}" aria-expanded="${open}">
-    <span style="min-width:0"><b>${esc(g.name)}</b><small class="mono">${esc(g.art)} · ${colors.length} color${colors.length===1?'':'s'}${inStock&&!S.stockOnly?` · ${inStock} in stock`:''}</small></span>
+    <span style="min-width:0"><b>${esc(g.name)}</b><small class="mono">${esc(g.art)} · ${colors.length} color${colors.length===1?'':'s'}</small></span>
     ${inCart?`<span class="pill p-good">${rolls(inCart)}</span>`:''}
     <svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
    </button>
