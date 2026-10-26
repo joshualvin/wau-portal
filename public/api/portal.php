@@ -104,14 +104,14 @@ case 'login':
   if (!$post) bad('POST only', 405);
   $email = strtolower(trim(isset($in['email']) ? (string)$in['email'] : ''));
   $pw = isset($in['password']) ? (string)$in['password'] : '';
-  if ($email === '' || $pw === '') bad('Enter your email and password.');
+  if ($email === '' || $pw === '') bad('Enter your email or username, and your password.');
   if (attempts_blocked($email, 'customer')) bad('Too many wrong passwords. Wait 15 minutes, or contact our sales team.', 429);
   $st = db()->prepare('SELECT id, password_hash, active FROM ' . E('portal_users') . ' WHERE email = ?');
   $st->execute(array($email));
   $u = $st->fetch();
   $ok = $u && (int)$u['active'] && password_verify($pw, $u['password_hash']);
   attempt_log($email, $ok, 'customer');
-  if (!$ok) { usleep(400000); bad('That email and password do not match an active account.', 401); }
+  if (!$ok) { usleep(400000); bad('That login and password do not match an active account.', 401); }
   session_regenerate_id(true);
   $_SESSION['uid'] = (int)$u['id'];
   $_SESSION['csrf'] = bin2hex(random_bytes(16));

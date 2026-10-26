@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   if ($do === 'create') {
     $email = strtolower(trim((string)$_POST['email'])); $name = trim((string)$_POST['name']); $cust = strtoupper(trim((string)$_POST['customer']));
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { flash('Enter a valid email address.', 'err'); back(); }
+    if ($p = login_problem($email)) { flash($p, 'err'); back(); }
     if ($cust === '' || !preg_match('/^[A-Z0-9._-]{1,30}$/', $cust)) { flash('Enter the customer code from the main system, e.g. RK001.', 'err'); back(); }
     if (!customer_info($cust)) { flash("Customer code $cust is not in the main system. Check the code (kodepelanggan).", 'err'); back(); }
     $exists = $pdo->prepare('SELECT COUNT(*) FROM ' . E('portal_users') . ' WHERE email = ?'); $exists->execute(array($email));
@@ -151,12 +151,12 @@ button:active{transform:translateY(1px)}
   $users = $pdo->query('SELECT * FROM ' . E('portal_users') . ' ORDER BY active DESC, customer, email')->fetchAll(); ?>
   <section class="panel"><h2>New customer login</h2>
     <form method="post" class="row"><input type="hidden" name="csrf" value="<?= $csrf ?>"><input type="hidden" name="do" value="create">
-      <label>Email<input name="email" type="email" required placeholder="name@company.co.id"></label>
+      <label>Email or username<input name="email" required autocapitalize="none" spellcheck="false" placeholder="name@company.co.id or budi.rk001"></label>
       <label>Contact name<input name="name" placeholder="Budi Santoso"></label>
       <label>Customer code<input name="customer" required placeholder="RK001"></label>
       <button class="primary">Create login</button></form></section>
   <section class="panel"><h2>Logins (<?= count($users) ?>)</h2><div class="tbl"><table>
-    <tr><th>Email</th><th>Name</th><th>Customer</th><th>Main system</th><th>Last sign-in</th><th>Status</th><th></th></tr>
+    <tr><th>Login</th><th>Name</th><th>Customer</th><th>Main system</th><th>Last sign-in</th><th>Status</th><th></th></tr>
     <?php foreach ($users as $u): ?><tr>
       <td><?= h($u['email']) ?></td><td><?= h($u['name']) ?></td>
       <td><span class="mono"><?= h($u['customer']) ?></span><br><span class="muted"><?= h(isset($synced[$u['customer']]) ? $synced[$u['customer']] : '') ?></span></td>

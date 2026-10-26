@@ -85,6 +85,12 @@ function attempt_log($login, $ok, $area) {
   if (mt_rand(1, 50) === 1) db()->prepare('DELETE FROM ' . E('portal_attempts') . ' WHERE at < ?')->execute(array(date('Y-m-d H:i:s', time() - 90 * 86400)));
 }
 
+// A customer login is an email address or a username (letters, numbers, . - _), e.g. budi.rk001 or 0812-3456-7890.
+// Expects the login already trimmed and lowercased. It is kept in portal_users.email either way.
+function login_problem($login) {
+  if (strpos($login, '@') !== false) return filter_var($login, FILTER_VALIDATE_EMAIL) ? '' : 'Enter a valid email address, or a username without @.';
+  return preg_match('/^[a-z0-9][a-z0-9._-]{2,59}$/', $login) ? '' : 'A username needs 3 to 60 letters or numbers (dot, dash and underscore are fine, no spaces).';
+}
 function password_problem($pw) {
   if (strlen($pw) < 8) return 'Use at least 8 characters.';
   if (!preg_match('/[A-Za-z]/', $pw) || !preg_match('/\d/', $pw)) return 'Use both letters and numbers.';
