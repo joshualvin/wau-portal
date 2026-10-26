@@ -37,6 +37,7 @@ return array(
   'cols' => array(
     'cust_code' => 'kodepelanggan', 'cust_name' => 'nama', 'cust_top' => 'top',
     'art_code' => 'kodebarang', 'art_color' => 'kodewarna', 'art_name' => 'nama', 'art_color_name' => 'warna', 'art_roll_m' => 'defaultmeter',
+    'art_active' => 'IsAktif',     // inactive articles are hidden from customers; '' = show all
     'stock_art' => 'kodebarang', 'stock_color' => 'kodewarna', 'stock_onhand' => 'rollonhand', 'stock_alloc' => 'rollonallocatedsj', 'stock_wh' => 'kodegudang',
     'trip_no' => 'NoShipment', 'trip_date' => 'Tanggal', 'trip_line_no' => 'NoShipment', 'trip_line_sj' => 'NoSJ',
     'pay_sj' => 'nosj', 'pay_amount' => 'jumlah',

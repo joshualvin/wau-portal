@@ -23,7 +23,7 @@ $need = array(
   'sj_head' => array('nosj', 'tgl', 'delivery', 'tgldelivery', 'nofk', 'lunas'),
   'sj_line' => array('nosj', 'noso', 'kodebarang', 'kodewarna', 'jumlah', 'meter', 'hargaso'),
   'customers' => array($c['cust_code'], $c['cust_name'], $c['cust_top']),
-  'articles' => array($c['art_code'], $c['art_color'], $c['art_name'], $c['art_color_name'], $c['art_roll_m']),
+  'articles' => array_filter(array($c['art_code'], $c['art_color'], $c['art_name'], $c['art_color_name'], $c['art_roll_m'], isset($c['art_active']) ? $c['art_active'] : '')),
   'stock' => array($c['stock_art'], $c['stock_color'], $c['stock_onhand'], $c['stock_alloc'], $c['stock_wh']),
   'trip_head' => array($c['trip_no'], $c['trip_date']),
   'trip_line' => array($c['trip_line_no'], $c['trip_line_sj']),
@@ -37,6 +37,9 @@ foreach ($need as $key => $cols) {
   if ($missing) { bad_line($tables[$key] . ': column(s) not found: ' . implode(', ', $missing)); say('           columns it has: ' . implode(', ', array_values($have))); }
   else say('  ok  ' . $tables[$key]);
 }
+if (!empty($c['art_active'])) { try {
+  $n = array(0, 0); foreach ($pdo->query('SELECT ' . C('art_active') . ' FROM ' . T('articles'))->fetchAll(PDO::FETCH_NUM) as $r) $n[is_inactive($r[0]) ? 1 : 0]++;
+  say('  ok  articles: ' . $n[0] . ' active, ' . $n[1] . ' inactive (hidden from customers)'); } catch (Exception $e) {} }
 try { $pdo->exec('INSERT INTO ' . E('portal_attempts') . " (at, ip, login, ok, area) VALUES (NOW(), 'check', 'check.php', 1, 'check')");
   $pdo->exec('DELETE FROM ' . E('portal_attempts') . " WHERE area = 'check'"); say('  ok  ' . cfgv('erp_db') . ' (write)'); }
 catch (Exception $e) { bad_line('cannot write to ' . cfgv('erp_db') . ': ' . $e->getMessage()); }
