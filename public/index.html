@@ -700,12 +700,20 @@ async function detailView(no){
   <p class="note" style="margin-top:14px">Questions? Email ${esc(S.contact.email)} or call ${esc(S.contact.phone)} and mention ${esc(o.no)}.</p>
  </div></section>`;
 }
+// A request on the same rail as an order: Order Received when it is sent, Order Processed once our team confirms it
+// (Being processed, set by Confirm in wau-erp) or makes the SO; Shipped and Delivered follow on the SO's own page.
+function reqRail(r){
+ if(r.status==='Cannot fulfil')return '';
+ const idx=r.status==='Being processed'||r.status==='SO created'?1:0, when=[r.created_at,idx?r.status_at:null,null,null];
+ return `<section class="panel"><div class="panel-b"><ol class="timeline t4">${STEPS.map((t,i)=>`<li class="${i<=idx?'done':''} ${i===idx?'now':''}" style="--i:${i}"><span class="d"></span><b>${t}</b><span>${when[i]?dt(when[i]):(i<=idx?'Done':'Pending')}</span></li>`).join('')}</ol></div></section>`;
+}
 async function requestView(id){
  if(!S.reqs)S.reqs=(await api('orders')).requests;
  const r=S.reqs.find(x=>x.id==id);if(!r){S.view='orders';return ordersView()}
  const msg=r.status==='SO created'?`Your sales order <b class="mono">${esc(r.so_number)}</b> was created.`:r.status==='Cannot fulfil'?'Our team could not fulfil this request.':r.status==='Being processed'?'Our sales team has confirmed your request and is making your sales order. Tracking starts once the SO is made.':'Our sales team checks your request and creates your sales order. Tracking starts once the SO is made.';
  return `<div><button class="back" data-go="orders">${ic('left')}My orders</button>
   <div class="pagehead"><div><h1>${esc(r.ref)}</h1><p class="muted">Sent ${dt(r.created_at)}${r.data.po?' · Your PO '+esc(r.data.po):''}</p></div>${pill(r.status)}</div></div>
+ ${reqRail(r)}
  <div class="alert" style="background:var(--${r.status==='Cannot fulfil'?'bad':r.status==='SO created'?'good':'warn'}-soft)"><span>${msg}${r.staff_note?' '+esc(r.staff_note):''}</span>${r.status==='SO created'&&r.so_number?`<button class="btn btn-line" data-open-order="${esc(r.so_number)}">Track ${esc(r.so_number)}</button>`:''}</div>
  <section class="panel"><div class="tbl"><table><thead><tr><th>Product</th><th class="r">Rolls</th><th class="r">Meters</th></tr></thead>
   <tbody>${r.data.items.map(i=>`<tr><td>${esc(i.name)} ${esc(i.color_name)} <span class="mono muted">${esc(i.art)}·${esc(i.color)}</span></td><td class="r">${i.rolls}</td><td class="r">${i.meters?num(i.meters)+' m':''}</td></tr>`).join('')}</tbody></table></div>

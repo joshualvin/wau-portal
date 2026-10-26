@@ -76,7 +76,7 @@ function order_detail($o) {
 }
 // The customer's order requests of the last 90 days, with what our staff set on the staff page.
 function my_requests($customer) {
-  $st = db()->prepare('SELECT r.id, r.created_at, r.payload, s.status, s.so_number, s.note FROM ' . E('portal_requests') . ' r
+  $st = db()->prepare('SELECT r.id, r.created_at, r.payload, s.status, s.so_number, s.note, s.updated_at FROM ' . E('portal_requests') . ' r
     LEFT JOIN ' . E('portal_request_status') . ' s ON s.request_id = r.id WHERE r.customer = ? AND r.kind = ? AND r.created_at >= ? ORDER BY r.id DESC');
   $st->execute(array($customer, 'order', date('Y-m-d H:i:s', strtotime('-90 days'))));
   $rows = $st->fetchAll(); $arts = array();
@@ -87,7 +87,7 @@ function my_requests($customer) {
     $p = $r['payload'];
     foreach ($p['items'] as $i => $it) { $l = label_for($names, $it['art'], $it['color']); $p['items'][$i] += array('name' => $l['name'], 'color_name' => $l['color_name'], 'meters' => round($it['rolls'] * $l['roll_m'], 2)); }
     $out[] = array('id' => (int)$r['id'], 'ref' => 'REQ-' . str_pad($r['id'], 4, '0', STR_PAD_LEFT), 'created_at' => $r['created_at'],
-      'status' => $r['status'] ? $r['status'] : 'Sent', 'so_number' => (string)$r['so_number'], 'staff_note' => (string)$r['note'], 'data' => $p);
+      'status' => $r['status'] ? $r['status'] : 'Sent', 'so_number' => (string)$r['so_number'], 'staff_note' => (string)$r['note'], 'status_at' => (string)$r['updated_at'], 'data' => $p);
   }
   return $out;
 }
