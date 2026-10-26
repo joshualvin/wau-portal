@@ -6,6 +6,7 @@ Staff manage logins and requests at **https://portal.wautama.com/staff/**.
 
 - Reads `si_wa` live, **read only**. Logins and requests are saved in `wau_erp` (tables `portal_*`).
 - Each request gets a reference (REQ-0001). Staff see it on the Requests tab, create the SO in wau-erp and mark it done.
+- **Request becomes its SO**: the salesperson types the request number in the SO's note in the main system (exactly *REQ-0007*, with the dash). The portal then lists that SO in its place ("from REQ-0007"; opening the request opens the SO), shows it as Order Processed until its first surat jalan, and wau-erp's Home drops the request. Typing the SO number on the staff page links them too.
 - Statuses of an order request: *Sent* (no status yet) → *Received by our team* → *Being processed* (also set by the **Confirm** button on wau-erp's Home, Portal orders) → *SO created* or *Cannot fulfil*. The request page shows them on the order progress bar: sent = Order Received, Being processed or SO created = Order Processed (with its date).
 - Reached from the internet only through the Cloudflare Tunnel; Apache serves it on 127.0.0.1:8081.
 

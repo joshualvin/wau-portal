@@ -74,8 +74,27 @@ function order_detail($o) {
     'lines' => array_map(function ($l) { return array('art' => $l['art'], 'color' => $l['color'], 'name' => $l['name'], 'color_name' => $l['color_name'], 'rolls' => $l['rolls'], 'meters' => $l['meters']); }, $s['lines']));
   return $d;
 }
+// SOs made from this customer's portal requests => the request [id, ref, handled_at]. Two ways to link them: the
+// salesperson types the request number in the SO's note in the main system ("REQ-0007", with the dash: notes already say
+// "REQ 20 METER" for 20 m requested; found by itself), or our
+// staff type the SO number on the staff page. From then on the request IS that SO for the customer: the SO counts as
+// Order Processed from that day (also before its first surat jalan), so the progress bar never steps back.
+function requests_by_so($customer, $orders) {
+  $st = db()->prepare('SELECT r.id, s.so_number, s.updated_at FROM ' . E('portal_requests') . ' r LEFT JOIN ' . E('portal_request_status') . ' s ON s.request_id = r.id
+    WHERE r.customer = ? AND r.kind = ? ORDER BY r.id');
+  $st->execute(array($customer, 'order'));
+  $mine = array(); $out = array();
+  foreach ($st->fetchAll() as $q) $mine[(int)$q['id']] = $q;
+  $link = function ($so, $id, $when) use (&$out) { $out[$so] = array('id' => $id, 'ref' => 'REQ-' . str_pad($id, 4, '0', STR_PAD_LEFT), 'handled_at' => (string)$when); };
+  foreach ($orders as $so => $o)
+    if (preg_match_all('/\bREQ-0*(\d+)/i', (string)$o['note'], $m)) foreach ($m[1] as $id)
+      if (isset($mine[(int)$id])) { $q = $mine[(int)$id]; $link($so, (int)$id, $q['updated_at'] ? $q['updated_at'] : $o['date']); }
+  foreach ($mine as $id => $q) { $so = trim((string)$q['so_number']); if ($so !== '' && !isset($out[$so])) $link($so, $id, $q['updated_at']); }
+  return $out;
+}
 // The customer's order requests of the last 90 days, with what our staff set on the staff page.
-function my_requests($customer) {
+function my_requests($customer, $by_so = array()) {
+  $so_of = array(); foreach ($by_so as $so => $x) $so_of[$x['id']] = $so;
   $st = db()->prepare('SELECT r.id, r.created_at, r.payload, s.status, s.so_number, s.note, s.updated_at FROM ' . E('portal_requests') . ' r
     LEFT JOIN ' . E('portal_request_status') . ' s ON s.request_id = r.id WHERE r.customer = ? AND r.kind = ? AND r.created_at >= ? ORDER BY r.id DESC');
   $st->execute(array($customer, 'order', date('Y-m-d H:i:s', strtotime('-90 days'))));
@@ -87,7 +106,7 @@ function my_requests($customer) {
     $p = $r['payload'];
     foreach ($p['items'] as $i => $it) { $l = label_for($names, $it['art'], $it['color']); $p['items'][$i] += array('name' => $l['name'], 'color_name' => $l['color_name'], 'meters' => round($it['rolls'] * $l['roll_m'], 2)); }
     $out[] = array('id' => (int)$r['id'], 'ref' => 'REQ-' . str_pad($r['id'], 4, '0', STR_PAD_LEFT), 'created_at' => $r['created_at'],
-      'status' => $r['status'] ? $r['status'] : 'Sent', 'so_number' => (string)$r['so_number'], 'staff_note' => (string)$r['note'], 'status_at' => (string)$r['updated_at'], 'data' => $p);
+      'status' => isset($so_of[(int)$r['id']]) ? 'SO created' : ($r['status'] ? $r['status'] : 'Sent'), 'so_number' => isset($so_of[(int)$r['id']]) ? $so_of[(int)$r['id']] : (string)$r['so_number'], 'staff_note' => (string)$r['note'], 'status_at' => (string)$r['updated_at'], 'data' => $p);
   }
   return $out;
 }
@@ -141,13 +160,20 @@ case 'products':
 
 case 'orders':
   $u = need_user(); $d = customer_data($u['customer']);
-  out(array('ok' => true, 'orders' => array_values(array_map('order_summary', $d['orders'])), 'requests' => my_requests($u['customer'])));
+  $reqs = requests_by_so($u['customer'], $d['orders']); $list = array();
+  foreach ($d['orders'] as $no => $o) { $x = order_summary($o);
+    if (isset($reqs[$no]) && $x['status'] === 'Order Received') { $x['status'] = 'Order Processed'; $x['status_date'] = $reqs[$no]['handled_at']; }
+    if (isset($reqs[$no])) $x['request_ref'] = $reqs[$no]['ref'];
+    $list[] = $x; }
+  out(array('ok' => true, 'orders' => $list, 'requests' => my_requests($u['customer'], $reqs)));
 
 case 'order':
   $u = need_user(); $d = customer_data($u['customer']);
   $no = isset($_GET['no']) ? (string)$_GET['no'] : '';
   if (!isset($d['orders'][$no])) bad('Order not found.', 404);   // only this customer's own orders
-  out(array('ok' => true, 'order' => order_detail($d['orders'][$no])));
+  $o = order_detail($d['orders'][$no]); $reqs = requests_by_so($u['customer'], $d['orders']);
+  if (isset($reqs[$no])) $o['request'] = $reqs[$no];
+  out(array('ok' => true, 'order' => $o));
 
 case 'order_request':
   if (!$post) bad('POST only', 405);
@@ -165,7 +191,8 @@ case 'order_request':
     'date' => $date, 'notes' => substr(trim((string)$in['notes']), 0, 1000));
   db()->prepare('INSERT INTO ' . E('portal_requests') . ' (kind, customer, login, created_at, payload) VALUES (?, ?, ?, ?, ?)')
     ->execute(array('order', $u['customer'], $u['email'], now(), json_encode($payload)));
-  out(array('ok' => true, 'ref' => 'REQ-' . str_pad(db()->lastInsertId(), 4, '0', STR_PAD_LEFT)));
+  $id = (int)db()->lastInsertId();
+  out(array('ok' => true, 'id' => $id, 'ref' => 'REQ-' . str_pad($id, 4, '0', STR_PAD_LEFT)));
 
 default:
   bad('Unknown request', 404);
