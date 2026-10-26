@@ -42,6 +42,9 @@ function ensure_tables($pdo) {
     login VARCHAR(190) NOT NULL DEFAULT '', created_at DATETIME NOT NULL, payload MEDIUMTEXT NOT NULL, KEY (customer, created_at)) DEFAULT CHARSET=utf8");
   $pdo->exec('CREATE TABLE IF NOT EXISTS ' . E('portal_request_status') . " (request_id INT PRIMARY KEY, status VARCHAR(30) NOT NULL, so_number VARCHAR(40) NOT NULL DEFAULT '',
     note VARCHAR(500) NOT NULL DEFAULT '', updated_at DATETIME NOT NULL, updated_by VARCHAR(100) NOT NULL DEFAULT '') DEFAULT CHARSET=utf8");
+  // Custom articles: an article listed here is shown only to the customers listed with it (staff page, Custom articles).
+  $pdo->exec('CREATE TABLE IF NOT EXISTS ' . E('portal_custom_articles') . " (art VARCHAR(20) NOT NULL, customer VARCHAR(30) NOT NULL,
+    created_at DATETIME NOT NULL, created_by VARCHAR(100) NOT NULL DEFAULT '', PRIMARY KEY (art, customer)) DEFAULT CHARSET=utf8");
 }
 
 function now() { return date('Y-m-d H:i:s'); }

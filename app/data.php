@@ -186,7 +186,23 @@ function invoice_order($a, $b) {
   return strcmp((string)$b['due'], (string)$a['due']);
 }
 
-// The catalog for one customer: articles with free stock, plus what they ordered in the last 24 months.
+// Custom articles (staff page, Custom articles tab): 'ART' => array('CUSTOMER' => true, ...). Codes compared in upper case.
+function custom_articles() {
+  static $map = null;
+  if ($map === null) {
+    $map = array();
+    foreach (db()->query('SELECT art, customer FROM ' . E('portal_custom_articles')) as $r) $map[strtoupper(trim($r['art']))][strtoupper(trim($r['customer']))] = true;
+  }
+  return $map;
+}
+// An article nobody listed is for everyone; a listed one only for the customers listed with it.
+function article_allowed($art, $customer, $custom) {
+  $a = strtoupper(trim($art));
+  return !isset($custom[$a]) || isset($custom[$a][strtoupper(trim($customer))]);
+}
+
+// The catalog for one customer: articles with free stock, plus what they ordered in the last 24 months,
+// minus custom articles made for other customers. Ordering checks this list too, so a hidden article cannot be ordered.
 function free_stock() {
   return cached('free_stock', (int)cfgv('stock_cache_seconds', 120), 'read_free_stock');
 }
@@ -206,6 +222,8 @@ function catalog_for($code) {
   foreach ($free as $key => $rolls) if ($rolls > 0) $wanted[$key] = true;
   foreach (q_rows('SELECT DISTINCT d.kodebarang, d.kodewarna FROM ' . T('so_line') . ' d JOIN ' . T('so_head') . ' h ON h.noso = d.noso WHERE h.kodepelanggan = ? AND h.tgl >= ?',
       array($code, date('Y-m-d', strtotime('-24 months')))) as $r) $wanted[tr($r[0]) . '|' . tr($r[1])] = true;
+  $custom = custom_articles();
+  foreach (array_keys($wanted) as $key) { $p = explode('|', $key, 2); if (!article_allowed($p[0], $code, $custom)) unset($wanted[$key]); }
   $arts = array(); foreach (array_keys($wanted) as $key) { $p = explode('|', $key, 2); $arts[] = $p[0]; }
   $names = cached('articles2_' . md5(implode(',', array_unique($arts))), 600, function () use ($arts) { return article_names($arts); });
   $list = array();

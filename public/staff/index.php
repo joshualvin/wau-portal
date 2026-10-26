@@ -72,11 +72,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     flash('Saved. The customer sees the new status right away.');
     back('requests');
   }
+  if ($do === 'custom_add' || $do === 'custom_remove') {
+    $art = strtoupper(trim((string)$_POST['art'])); $cust = strtoupper(trim((string)$_POST['customer']));
+    if (!preg_match('/^[A-Z0-9._-]{1,20}$/', $art) || !preg_match('/^[A-Z0-9._-]{1,30}$/', $cust)) { flash('Enter the article code and the customer code from the main system, e.g. SC01 and RK001.', 'err'); back('custom'); }
+    if ($do === 'custom_remove') {
+      $pdo->prepare('DELETE FROM ' . E('portal_custom_articles') . ' WHERE art = ? AND customer = ?')->execute(array($art, $cust));
+      $left = custom_articles(); // read after the delete
+      flash("$cust removed from $art." . (isset($left[$art]) ? '' : " No customer is left on it, so $art is shown to every customer again."));
+      back('custom');
+    }
+    if (!article_names(array($art), true)) { flash("Article $art is not in the main system. Check the code (kodebarang).", 'err'); back('custom'); }
+    $ci = customer_info($cust);
+    if (!$ci) { flash("Customer code $cust is not in the main system. Check the code (kodepelanggan).", 'err'); back('custom'); }
+    $pdo->prepare('INSERT IGNORE INTO ' . E('portal_custom_articles') . ' (art, customer, created_at, created_by) VALUES (?, ?, ?, ?)')->execute(array($art, $cust, now(), staff()));
+    flash("$art is now a custom article: shown to $cust ({$ci['name']}) and to no customer that is not listed with it.");
+    back('custom');
+  }
   back();
 }
 
 // ---------------------------------------------------------------- page
-$tab = isset($_GET['tab']) && $_GET['tab'] === 'requests' ? 'requests' : 'accounts';
+$tab = isset($_GET['tab']) && in_array($_GET['tab'], array('requests', 'custom'), true) ? $_GET['tab'] : 'accounts';
 $flash = isset($_SESSION['flash']) ? $_SESSION['flash'] : null; unset($_SESSION['flash']);
 if (!$flash && isset($_GET['nocookie'])) $flash = array('Your browser did not keep the sign-in cookie. Open the staff page at https://portal.wautama.com/staff/ and allow cookies for this site.', 'err');
 $reveal = isset($_SESSION['reveal']) ? $_SESSION['reveal'] : null; unset($_SESSION['reveal']);
@@ -140,7 +156,7 @@ button:active{transform:translateY(1px)}
 <header><b style="display:flex;align-items:center;gap:10px"><img src="data:image/png;base64,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" alt="" width="28" height="28">WAU Portal · Staff</b><span style="display:flex;gap:12px;align-items:center"><span class="muted" style="color:#A3A6AB">Signed in as <?= h(staff()) ?></span>
 <form method="post"><input type="hidden" name="csrf" value="<?= $csrf ?>"><input type="hidden" name="do" value="logout"><button class="small">Sign out</button></form></span></header>
 <main>
-  <div class="row" style="justify-content:space-between"><nav class="tabs"><a href="./" class="<?= $tab === 'accounts' ? 'on' : '' ?>">Customer logins</a><a href="./?tab=requests" class="<?= $tab === 'requests' ? 'on' : '' ?>">Requests</a></nav></div>
+  <div class="row" style="justify-content:space-between"><nav class="tabs"><a href="./" class="<?= $tab === 'accounts' ? 'on' : '' ?>">Customer logins</a><a href="./?tab=requests" class="<?= $tab === 'requests' ? 'on' : '' ?>">Requests</a><a href="./?tab=custom" class="<?= $tab === 'custom' ? 'on' : '' ?>">Custom articles</a></nav></div>
   <?php if ($flash): ?><div class="msg <?= $flash[1] === 'err' ? 'err' : 'ok' ?>"><?= h($flash[0]) ?></div><?php endif; ?>
   <?php if ($reveal): ?><div class="reveal">
     <b>Temporary password for <?= h($reveal[0]) ?></b>
@@ -192,6 +208,27 @@ button:active{transform:translateY(1px)}
       <td style="white-space:nowrap"><form method="post" style="display:inline"><input type="hidden" name="csrf" value="<?= $csrf ?>"><input type="hidden" name="id" value="<?= (int)$u['id'] ?>">
         <button class="small" name="do" value="reset">Reset password</button> <button class="small" name="do" value="toggle"><?= (int)$u['active'] ? 'Turn off' : 'Turn on' ?></button></form></td>
     </tr><?php endforeach; if (!$users) echo '<tr><td colspan="7" class="muted">No logins yet. Create the first one above.</td></tr>'; ?>
+  </table></div></section>
+
+<?php elseif ($tab === 'custom'):
+  $rows = $pdo->query('SELECT art, customer, created_at, created_by FROM ' . E('portal_custom_articles') . ' ORDER BY art, customer')->fetchAll();
+  $anames = array(); foreach (($rows ? article_names(array_map(function ($r) { return $r['art']; }, $rows), true) : array()) as $key => $n) { $a = strtoupper(explode('|', $key, 2)[0]); if (!isset($anames[$a])) $anames[$a] = $n['name']; }
+  $cnames = array(); foreach ($rows as $r) if (!isset($cnames[$r['customer']])) { $ci = customer_info($r['customer']); $cnames[$r['customer']] = $ci ? $ci['name'] : ''; } ?>
+  <section class="panel"><h2>Custom articles</h2>
+    <p class="muted" style="margin-top:0">An article listed here is shown only to the customers listed with it; other customers cannot see or order it. Add one line per customer. Articles that are not listed are shown as usual.</p>
+    <form method="post" class="row"><input type="hidden" name="csrf" value="<?= $csrf ?>"><input type="hidden" name="do" value="custom_add">
+      <label>Article code<input name="art" required placeholder="SC01" autocomplete="off"></label>
+      <label>Only for customer code<input name="customer" required placeholder="RK001" autocomplete="off"></label>
+      <button class="primary">Add</button></form></section>
+  <section class="panel"><h2>List (<?= count($rows) ?>)</h2><div class="tbl"><table>
+    <tr><th>Article</th><th>Only for</th><th>Added</th><th></th></tr>
+    <?php foreach ($rows as $r): ?><tr>
+      <td><span class="mono"><?= h($r['art']) ?></span><br><span class="muted"><?= h(isset($anames[strtoupper($r['art'])]) ? $anames[strtoupper($r['art'])] : '') ?></span></td>
+      <td><span class="mono"><?= h($r['customer']) ?></span><br><span class="muted"><?= h($cnames[$r['customer']]) ?></span></td>
+      <td><?= h(date('j M Y', strtotime($r['created_at']))) ?><br><span class="muted"><?= h($r['created_by']) ?></span></td>
+      <td><form method="post" style="display:inline" onsubmit="return confirm('Remove <?= h($r['customer']) ?> from <?= h($r['art']) ?>?')"><input type="hidden" name="csrf" value="<?= $csrf ?>"><input type="hidden" name="do" value="custom_remove">
+        <input type="hidden" name="art" value="<?= h($r['art']) ?>"><input type="hidden" name="customer" value="<?= h($r['customer']) ?>"><button class="small">Remove</button></form></td>
+    </tr><?php endforeach; if (!$rows) echo '<tr><td colspan="4" class="muted">No custom articles yet. Every article is shown to every customer.</td></tr>'; ?>
   </table></div></section>
 
 <?php else:
