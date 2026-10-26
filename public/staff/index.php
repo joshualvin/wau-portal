@@ -105,6 +105,7 @@ button.primary{background:var(--accent);border-color:var(--accent);color:#fff}bu
 .ok{background:var(--good-soft);color:var(--good)}.err{background:var(--bad-soft);color:var(--bad)}.warn{background:var(--warn-soft);color:var(--warn)}.mute{background:var(--bg);color:var(--muted)}
 .msg{padding:12px 16px;border-radius:12px}.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85em}.muted{color:var(--muted)}
 .reveal{background:var(--accent-soft);border-radius:14px;padding:18px;display:grid;gap:8px}.reveal code{font-size:1.2rem;user-select:all;background:var(--surface);padding:6px 10px;border-radius:8px;justify-self:start}
+.ideas{flex-basis:100%;margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:.85rem}.ideas button{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:500}
 details summary{cursor:pointer;color:var(--accent);font-weight:600}.login{max-width:380px;margin:10vh auto;display:grid;gap:12px}
 /* motion: every save reloads the page, so pages cross-fade and the result of the action (message, temporary password) arrives last */
 :root{--ease-out:cubic-bezier(.16,1,.3,1);--rise:6px}
@@ -150,11 +151,36 @@ button:active{transform:translateY(1px)}
 <?php if ($tab === 'accounts'):
   $users = $pdo->query('SELECT * FROM ' . E('portal_users') . ' ORDER BY active DESC, customer, email')->fetchAll(); ?>
   <section class="panel"><h2>New customer login</h2>
-    <form method="post" class="row"><input type="hidden" name="csrf" value="<?= $csrf ?>"><input type="hidden" name="do" value="create">
-      <label>Email or username<input name="email" required autocapitalize="none" spellcheck="false" placeholder="name@company.co.id or budi.rk001"></label>
-      <label>Contact name<input name="name" placeholder="Budi Santoso"></label>
-      <label>Customer code<input name="customer" required placeholder="RK001"></label>
-      <button class="primary">Create login</button></form></section>
+    <form method="post" class="row" id="newlogin"><input type="hidden" name="csrf" value="<?= $csrf ?>"><input type="hidden" name="do" value="create">
+      <label>Customer code<input name="customer" required placeholder="RK001" autocomplete="off"></label>
+      <label>Contact name<input name="name" placeholder="Budi Santoso" autocomplete="off"></label>
+      <label>Email or username<input name="email" required autocapitalize="none" spellcheck="false" autocomplete="off" placeholder="name@company.co.id or rk001.budi"></label>
+      <button class="primary">Create login</button>
+      <p class="ideas" id="ideas" hidden><span class="muted">Username from the customer code:</span></p></form></section>
+  <script>
+  // Username ideas from the customer code (and the contact's first name); logins that already exist are left out.
+  (function () {
+    var taken = new Set(<?= json_encode(array_map(function ($u) { return $u['email']; }, $users), JSON_HEX_TAG | JSON_HEX_AMP) ?>);
+    var f = document.getElementById('newlogin'), box = document.getElementById('ideas');
+    var el = function (n) { return f.elements.namedItem(n); };
+    var clean = function (s) { return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9._-]+/g, ''); };
+    var free = function (s) { return /^[a-z0-9][a-z0-9._-]{2,59}$/.test(s) && !taken.has(s); }; // same rule as login_problem() in app/lib.php
+    function update() {
+      var code = clean(el('customer').value.trim()), first = clean(el('name').value.trim().split(/\s+/)[0] || ''), list = [];
+      if (code) [code, first && code + '.' + first, first && first + '.' + code].forEach(function (s) { if (s && free(s) && list.indexOf(s) < 0) list.push(s); });
+      for (var n = 2; code && list.length < 3 && n < 100; n++) if (free(code + '-' + n)) list.push(code + '-' + n);
+      box.querySelectorAll('button').forEach(function (b) { b.remove(); });
+      list.slice(0, 3).forEach(function (s) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'small'; b.textContent = s;
+        b.setAttribute('aria-label', 'Use ' + s + ' as the login');
+        b.onclick = function () { el('email').value = s; el('email').focus(); };
+        box.appendChild(b);
+      });
+      box.hidden = !list.length;
+    }
+    el('customer').addEventListener('input', update); el('name').addEventListener('input', update);
+  })();
+  </script>
   <section class="panel"><h2>Logins (<?= count($users) ?>)</h2><div class="tbl"><table>
     <tr><th>Login</th><th>Name</th><th>Customer</th><th>Main system</th><th>Last sign-in</th><th>Status</th><th></th></tr>
     <?php foreach ($users as $u): ?><tr>
