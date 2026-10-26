@@ -256,7 +256,6 @@ dialog.m::backdrop{background:rgba(10,10,12,.45);backdrop-filter:blur(3px)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);width:max-content;text-align:center;bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:50;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:999px;font-size:.9rem;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:calc(100vw - 32px)}
 @media (max-width:860px){.toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
 @media (max-width:520px){.hide-xs{display:none}}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
 .prod-b h3{overflow-wrap:anywhere}
 button[disabled]{opacity:.55;cursor:wait}
@@ -338,6 +337,51 @@ details.older[open]>summary{padding-bottom:0}
 /* brand mark: company logo */
 .mark{background:url(data:image/png;base64,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) center/contain no-repeat!important;border-radius:0!important;font-size:0!important;color:transparent!important;outline:0!important;box-shadow:none!important}
 .mark::after{display:none!important}
+
+/* motion: quick feedback and state changes; one authored moment, the status rail filling up to where the rolls are now */
+:root{--ease-out:cubic-bezier(.16,1,.3,1);--rise:6px}
+@keyframes in{from{opacity:0;transform:translateY(var(--rise))}}
+@keyframes fade{from{opacity:0}}
+@keyframes unfold{from{opacity:0;clip-path:inset(0 0 100% 0)}}
+@keyframes up{from{transform:translateY(100%)}}
+@keyframes pop{40%{transform:scale(1.14)}}
+@keyframes toast{from{opacity:0;transform:translate(-50%,8px)}}
+.content>*{animation:in .26s var(--ease-out) backwards}
+.content>:nth-child(2){animation-delay:40ms}
+.content>:nth-child(n+3){animation-delay:80ms}
+details.older[open] .rows{animation:in .24s var(--ease-out) backwards}
+.art .chev,details.older .chev{transition:transform .22s var(--ease-out)}
+.art.opening .colors{animation:unfold .28s var(--ease-out) backwards}
+.crow{transition:background-color .2s}
+.crow .qty input{transition:border-color .2s}
+.bump{animation:pop .24s var(--ease-out)}
+.cartbar{animation:up .3s var(--ease-out) backwards}
+.toast:not([hidden]){animation:toast .24s var(--ease-out) backwards}
+.toast.out{opacity:0;transition:opacity .16s}
+/* the sent check draws itself: circle, then tick */
+.drawn circle{stroke-dasharray:57;animation:draw-c .45s var(--ease-out) .08s backwards}
+.drawn path{stroke-dasharray:12;animation:draw-t .28s var(--ease-out) .4s backwards}
+@keyframes draw-c{from{stroke-dashoffset:57}}
+@keyframes draw-t{from{stroke-dashoffset:12}}
+/* status rail: each reached dot fills, then the line travels to the next one (200 ms a step) */
+.timeline li{--d:calc(var(--i,0) * 200ms + 120ms)}
+.timeline li.done::before{background:linear-gradient(var(--accent),var(--accent)) left top/100% 100% no-repeat var(--line);animation:rail-x .18s cubic-bezier(.4,0,.2,1) calc(var(--d) + 20ms) backwards}
+.timeline li.done .d{animation:dot .16s var(--ease-out) var(--d) backwards}
+.timeline li.done.now .d{animation:dot .16s var(--ease-out) var(--d) backwards,halo .6s var(--ease-out) calc(var(--d) + 120ms) backwards}
+.timeline li.part .d{animation:halo .6s var(--ease-out) calc(var(--d) + 120ms) backwards}
+@keyframes rail-x{from{background-size:0% 100%}}
+@keyframes rail-y{from{background-size:100% 0%}}
+@keyframes dot{from{background:var(--surface);border-color:var(--line)}}
+@keyframes halo{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent)}}
+@media (max-width:640px){.timeline li.done::before{animation-name:rail-y}}
+/* reduced motion: no travel, drawing or scaling; fades and color changes stay so every change is still visible */
+@media (prefers-reduced-motion:reduce){
+ :root{--rise:0px}
+ .timeline li.done::before,.timeline li .d,.drawn circle,.drawn path,.bump{animation:none!important}
+ .art.opening .colors,.cartbar{animation-name:fade}
+ .art .chev,details.older .chev{transition:none}
+ .btn{transition:background .15s,border-color .15s}.btn:active{transform:none}
+}
 </style>
 </head>
 <body>
@@ -383,7 +427,9 @@ async function api(a,body){
  if(j.csrf)S.csrf=j.csrf;
  return j;
 }
-function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,3600)}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.remove('out');t.hidden=true;void t.offsetWidth;t.hidden=false;
+ clearTimeout(toast._t);toast._t=setTimeout(()=>{t.classList.add('out');toast._t=setTimeout(()=>t.hidden=true,160)},3600)}
+const bump=el=>{if(!el)return;el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump')}; // a count that changed pops once
 
 /* ---------------- sign-in screens ---------------- */
 const brand=sub=>`<div class="brandrow"><span class="mark">WAU</span><span><b>Wahyu Agung Utama</b><small>${sub}</small></span></div>`;
@@ -503,7 +549,7 @@ function summaryHtml(){
 function sentView(){
  const c=S.contact||{};
  return `<section class="panel" style="max-width:560px;margin:24px auto 0"><div class="panel-b" style="display:grid;gap:14px;text-align:center;justify-items:center;padding:36px 24px">
-  <span style="color:var(--good)">${ic('check').replace('class="i"','class="i" style="width:48px;height:48px"')}</span>
+  <span style="color:var(--good)">${ic('check').replace('class="i"','class="i drawn" style="width:48px;height:48px"')}</span>
   <h1>Order request sent</h1>
   <p class="muted">Your reference is <b class="mono" style="color:var(--ink)">${esc(S.sent.ref)}</b> · ${rolls(S.sent.rolls)}.<br>Our sales team will contact you to confirm price and delivery.</p>
   <p class="note">Questions? Email ${esc(c.email)} or call ${esc(c.phone)} and mention ${esc(S.sent.ref)}.</p>
@@ -569,7 +615,7 @@ function shipCard(x,i,n){
  const steps=[['Prepared',x.date],['Shipped',x.shipped_date],['Delivered',x.delivered?x.delivered_date:null]];
  return `<article class="ship" id="sj-${esc(x.sj)}">
   <div class="ship-h"><div><span class="eyebrow">Shipment ${i+1}${n>1?' of '+n:''}</span><b class="mono">${esc(x.sj)}</b><small>${rolls(x.rolls)} · ${num(x.meters)} m</small></div>${pill(st)}</div>
-  <ol class="timeline t3">${steps.map(([t,d],j)=>`<li class="${j<=k?'done':''} ${j===k?'now':''}"><span class="d"></span><b>${t}</b><span>${d?dt(d):(j<=k?'Done':'Pending')}</span></li>`).join('')}</ol>
+  <ol class="timeline t3">${steps.map(([t,d],j)=>`<li class="${j<=k?'done':''} ${j===k?'now':''}" style="--i:${j}"><span class="d"></span><b>${t}</b><span>${d?dt(d):(j<=k?'Done':'Pending')}</span></li>`).join('')}</ol>
   ${(x.lines||[]).length?`<ul class="ship-l">${x.lines.map(l=>`<li><span>${esc(l.name)} ${esc(l.color_name)} <span class="mono muted">${esc(l.art)}·${esc(l.color)}</span></span><span>${rolls(l.rolls)}${l.meters?' · '+num(l.meters)+' m':''}</span></li>`).join('')}</ul>`:''}
  </article>`;
 }
@@ -583,7 +629,7 @@ async function detailView(no){
  const when=[o.history.received,o.history.processed,o.history.shipped,o.history.delivered];
  return `<div><button class="back" data-go="orders">${ic('left')}My orders</button>
   <div class="pagehead"><div><h1>${esc(o.no)}</h1><p class="muted">Ordered ${dt(o.date)} · ${rolls(o.rolls)} · ${num(o.meters)} m</p></div>${pill(o.status)}</div></div>
- <section class="panel"><div class="panel-b"><ol class="timeline t4">${STEPS.map((t,i)=>part&&i===3?`<li class="part now"><span class="d"></span><b>Partly delivered</b><span>${got} of ${rolls(o.rolls)}${when[3]?' · '+dt(when[3]):''}</span></li>`:`<li class="${i<=idx?'done':''} ${i===idx&&!part?'now':''}"><span class="d"></span><b>${t}</b><span>${i<=idx&&when[i]?dt(when[i]):(i<=idx?'Done':'Pending')}</span></li>`).join('')}</ol>
+ <section class="panel"><div class="panel-b"><ol class="timeline t4">${STEPS.map((t,i)=>part&&i===3?`<li class="part now" style="--i:3"><span class="d"></span><b>Partly delivered</b><span>${got} of ${rolls(o.rolls)}${when[3]?' · '+dt(when[3]):''}</span></li>`:`<li class="${i<=idx?'done':''} ${i===idx&&!part?'now':''}" style="--i:${i}"><span class="d"></span><b>${t}</b><span>${i<=idx&&when[i]?dt(when[i]):(i<=idx?'Done':'Pending')}</span></li>`).join('')}</ol>
   ${o.status==='Partly delivered'?`<p class="note" style="margin-top:14px">${rolls(o.rolls_to_come)} still to come on a next delivery.</p>`:''}</div></section>
  <section class="panel"><div class="panel-h"><h2>Products</h2></div><div class="tbl" style="margin-top:8px"><table>
   <thead><tr><th>Product</th><th class="r">Rolls</th><th class="r hide-sm">Sent</th><th class="r">Meters</th></tr></thead>
@@ -615,7 +661,7 @@ function refresh(){ // keep typed text and scroll position while the order chang
  Object.keys(keep).forEach(id=>{const x=document.getElementById(id);if(x)x.value=keep[id]});
  const bar=document.querySelector('.cartbar'),n=cartCount();
  if(n&&!bar)document.body.querySelector('#root').insertAdjacentHTML('beforeend',`<div class="cartbar"><span><b>${rolls(n)}</b> in your order</span><button class="btn btn-primary" data-act="jump">Review order</button></div>`);
- else if(bar&&!n)bar.remove();else if(bar)bar.querySelector('b').textContent=rolls(n);
+ else if(bar&&!n)bar.remove();else if(bar&&bar.querySelector('b').textContent!==rolls(n)){bar.querySelector('b').textContent=rolls(n);bump(bar.querySelector('b'))}
 }
 async function boot(){
  try{const m=await api('me');S.me=m.user;S.contact=m.contact}catch(e){$('#root').innerHTML=`<div class="login"><div class="login-card"><h1>Portal unavailable</h1><p class="muted">${esc(e.message)}</p></div></div>`;return}
@@ -659,7 +705,7 @@ function refreshSummary(){ // redraw the order summary, keeping what was typed i
  Object.keys(keep).forEach(id=>{const x=document.getElementById(id);if(x)x.value=keep[id]});
  const bar=document.querySelector('.cartbar'),n=cartCount();
  if(n&&!bar)$('#root').insertAdjacentHTML('beforeend',`<div class="cartbar"><span><b>${rolls(n)}</b> in your order</span><button class="btn btn-primary" data-act="jump">Review order</button></div>`);
- else if(bar&&!n)bar.remove();else if(bar)bar.querySelector('b').textContent=rolls(n);
+ else if(bar&&!n)bar.remove();else if(bar&&bar.querySelector('b').textContent!==rolls(n)){bar.querySelector('b').textContent=rolls(n);bump(bar.querySelector('b'))}
 }
 document.addEventListener('input',e=>{
  if(e.target.id==='q'){S.q=e.target.value;$('#plist').innerHTML=productCards();return}
@@ -676,7 +722,7 @@ function refreshHeaders(){ // roll count on each article row
  document.querySelectorAll('#plist .art').forEach(a=>{const art=a.querySelector('.art-h').dataset.art;
   const n=Object.keys(S.cart).filter(k=>k.split('|')[0]===art).reduce((x,k)=>x+S.cart[k],0);
   let p=a.querySelector('.art-h .pill');if(n&&!p){a.querySelector('.chev').insertAdjacentHTML('beforebegin','<span class="pill p-good"></span>');p=a.querySelector('.art-h .pill')}
-  if(p){if(n)p.textContent=rolls(n);else p.remove()}});
+  if(p){if(!n)p.remove();else if(p.textContent!==rolls(n)){p.textContent=rolls(n);bump(p)}}});
 }
 document.addEventListener('click',async e=>{
  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
@@ -690,7 +736,9 @@ document.addEventListener('click',async e=>{
  if(d.act==='stockonly'){S.stockOnly=!S.stockOnly;b.setAttribute('aria-pressed',S.stockOnly);$('#plist').innerHTML=productCards();return}
  if(d.act==='jump'){$('#summary').scrollIntoView({behavior:'smooth',block:'start'});return}
  if(d.act==='clear'){S.cart={};saveCart();refresh();return}
- if(d.art){S.open.has(d.art)?S.open.delete(d.art):S.open.add(d.art);$('#plist').innerHTML=productCards();return}
+ if(d.art){const opening=!S.open.has(d.art);opening?S.open.add(d.art):S.open.delete(d.art);$('#plist').innerHTML=productCards();
+  // the list is redrawn: keep focus on the article that was tapped, and unfold only that one
+  const h=$('#plist').querySelector(`.art-h[data-art="${CSS.escape(d.art)}"]`);if(h){h.focus({preventScroll:true});if(opening)h.parentNode.classList.add('opening')}return}
  if(d.rm){delete S.cart[d.rm];saveCart();refresh();return}
  if(d.add){S.cart[d.add]=1;saveCart();refresh();return}
  if(d.inc){S.cart[d.inc]=Math.min(999,(S.cart[d.inc]||0)+1);saveCart();refresh();return}

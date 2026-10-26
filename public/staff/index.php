@@ -106,6 +106,21 @@ button.primary{background:var(--accent);border-color:var(--accent);color:#fff}bu
 .msg{padding:12px 16px;border-radius:12px}.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85em}.muted{color:var(--muted)}
 .reveal{background:var(--accent-soft);border-radius:14px;padding:18px;display:grid;gap:8px}.reveal code{font-size:1.2rem;user-select:all;background:var(--surface);padding:6px 10px;border-radius:8px;justify-self:start}
 details summary{cursor:pointer;color:var(--accent);font-weight:600}.login{max-width:380px;margin:10vh auto;display:grid;gap:12px}
+/* motion: every save reloads the page, so pages cross-fade and the result of the action (message, temporary password) arrives last */
+:root{--ease-out:cubic-bezier(.16,1,.3,1);--rise:6px}
+@view-transition{navigation:auto}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.18s}
+@keyframes in{from{opacity:0;transform:translateY(var(--rise))}}
+@keyframes mark{from{background:color-mix(in srgb,var(--accent) 35%,var(--surface))}}
+.msg,.reveal{animation:in .3s var(--ease-out) .12s backwards}
+.reveal code{animation:mark 1.1s var(--ease-out) .4s backwards}
+details[open]>form{animation:in .2s var(--ease-out) backwards}
+button{transition:background-color .15s,border-color .15s,transform .12s}
+button:hover{border-color:var(--ink)}
+button.primary:hover{background:color-mix(in srgb,var(--accent) 88%,black);border-color:color-mix(in srgb,var(--accent) 88%,black)}
+button:active{transform:translateY(1px)}
+.tabs a{transition:background-color .15s,color .15s,border-color .15s}.tabs a:not(.on):hover{color:var(--ink);border-color:var(--ink)}
+@media (prefers-reduced-motion:reduce){:root{--rise:0px}button:active{transform:none}}
 </style></head><body>
 <?php if (!staff()): ?>
 <form class="panel login" method="post">
