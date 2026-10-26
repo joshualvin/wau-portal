@@ -1,6 +1,7 @@
 <?php
 // WAU customer portal (self-hosted) · API for the customer pages.
-// Sign-in, password change, the product list and order requests. Nothing else is exposed to customers.
+// Sign-in, password change, the product list, order requests and order tracking.
+// Every answer is limited to the signed-in customer's own code. No prices, payments or invoices are sent.
 
 $APP = dirname(dirname(dirname(__FILE__))) . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR;
 require $APP . 'lib.php';
@@ -58,6 +59,37 @@ function need_user($allow_must_change = false) {
   if ((int)$u['must_change'] && !$allow_must_change) bad('Please choose a new password first.', 409);
   return $u;
 }
+// Order status for the customer: only what they need to follow delivery.
+function order_summary($o) {
+  return array('no' => $o['no'], 'date' => $o['date'], 'status' => $o['status'], 'status_date' => $o['status_date'],
+    'rolls' => $o['rolls'], 'meters' => $o['meters'], 'items' => $o['items'], 'rolls_to_come' => $o['rolls_to_come']);
+}
+function order_detail($o) {
+  $d = order_summary($o); $d['history'] = $o['history'];
+  $d['lines'] = array(); foreach ($o['lines'] as $l) $d['lines'][] = array('art' => $l['art'], 'color' => $l['color'], 'name' => $l['name'],
+    'color_name' => $l['color_name'], 'rolls' => $l['rolls'], 'meters' => $l['meters'], 'on_sj' => $l['on_sj']);
+  $d['sjs'] = array(); foreach ($o['sjs'] as $s) $d['sjs'][] = array('sj' => $s['sj'], 'date' => $s['date'], 'shipped_date' => $s['shipped_date'],
+    'delivered' => $s['delivered'], 'delivered_date' => $s['delivered_date'], 'rolls' => $s['rolls'], 'meters' => $s['meters']);
+  return $d;
+}
+// The customer's order requests of the last 90 days, with what our staff set on the staff page.
+function my_requests($customer) {
+  $st = db()->prepare('SELECT r.id, r.created_at, r.payload, s.status, s.so_number, s.note FROM ' . E('portal_requests') . ' r
+    LEFT JOIN ' . E('portal_request_status') . ' s ON s.request_id = r.id WHERE r.customer = ? AND r.kind = ? AND r.created_at >= ? ORDER BY r.id DESC');
+  $st->execute(array($customer, 'order', date('Y-m-d H:i:s', strtotime('-90 days'))));
+  $rows = $st->fetchAll(); $arts = array();
+  foreach ($rows as $i => $r) { $rows[$i]['payload'] = json_decode($r['payload'], true); foreach ($rows[$i]['payload']['items'] as $it) $arts[] = $it['art']; }
+  $names = $arts ? article_names($arts, true) : array();
+  $out = array();
+  foreach ($rows as $r) {
+    $p = $r['payload'];
+    foreach ($p['items'] as $i => $it) { $l = label_for($names, $it['art'], $it['color']); $p['items'][$i] += array('name' => $l['name'], 'color_name' => $l['color_name'], 'meters' => round($it['rolls'] * $l['roll_m'], 2)); }
+    $out[] = array('id' => (int)$r['id'], 'ref' => 'REQ-' . str_pad($r['id'], 4, '0', STR_PAD_LEFT), 'created_at' => $r['created_at'],
+      'status' => $r['status'] ? $r['status'] : 'Sent', 'so_number' => (string)$r['so_number'], 'staff_note' => (string)$r['note'], 'data' => $p);
+  }
+  return $out;
+}
+
 switch ($action) {
 
 case 'me':
@@ -104,6 +136,16 @@ case 'password':
 case 'products':
   $u = need_user();
   out(array('ok' => true, 'products' => array_values(catalog_for($u['customer']))));
+
+case 'orders':
+  $u = need_user(); $d = customer_data($u['customer']);
+  out(array('ok' => true, 'orders' => array_values(array_map('order_summary', $d['orders'])), 'requests' => my_requests($u['customer'])));
+
+case 'order':
+  $u = need_user(); $d = customer_data($u['customer']);
+  $no = isset($_GET['no']) ? (string)$_GET['no'] : '';
+  if (!isset($d['orders'][$no])) bad('Order not found.', 404);   // only this customer's own orders
+  out(array('ok' => true, 'order' => order_detail($d['orders'][$no])));
 
 case 'order_request':
   if (!$post) bad('POST only', 405);

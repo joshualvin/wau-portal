@@ -42,13 +42,13 @@ function is_inactive($v) {
   if ($v === "\0") return true;                                   // BIT(1) column, value 0
   return in_array(strtoupper(trim((string)$v)), array('0', 'N', 'F', 'FALSE', 'NO', 'TIDAK'), true);
 }
-function article_names($arts) {
+function article_names($arts, $include_inactive = false) {
   $map = array();
   $cols = cfgv('cols'); $active = isset($cols['art_active']) && $cols['art_active'] !== '' ? ', ' . C('art_active') : '';
   foreach (chunks_of($arts) as $part)
     foreach (q_rows('SELECT ' . C('art_code') . ', ' . C('art_color') . ', ' . C('art_name') . ', ' . C('art_color_name') . ', ' . C('art_roll_m') . $active . '
         FROM ' . T('articles') . ' WHERE ' . C('art_code') . ' IN (' . marks($part) . ')', $part) as $r) {
-      if ($active && is_inactive($r[5])) continue;
+      if ($active && !$include_inactive && is_inactive($r[5])) continue;
       $map[tr($r[0]) . '|' . tr($r[1])] = array('name' => tr($r[2]) !== '' ? tr($r[2]) : tr($r[0]), 'color_name' => tr($r[3]) !== '' ? tr($r[3]) : tr($r[1]), 'roll_m' => (float)$r[4]);
     }
   return $map;
@@ -114,7 +114,7 @@ function customer_data($code) {
     foreach (q_rows('SELECT ' . C('pay_sj') . ', SUM(' . C('pay_amount') . ') FROM ' . T('pay_line') . ' WHERE ' . C('pay_sj') . ' IN (' . marks($part) . ') GROUP BY ' . C('pay_sj'), $part) as $r)
       if (isset($sj[tr($r[0])])) $sj[tr($r[0])]['paid'] = (float)$r[1];
   }
-  $names = article_names($arts);
+  $names = article_names($arts, true); // past orders keep their names even if the article is inactive now
 
   // Order status.
   foreach ($orders as $so => $o) {
