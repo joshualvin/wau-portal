@@ -1,0 +1,5 @@
+# Passwords and local settings never go to GitHub
+config.php
+*.log
+.DS_Store
+Thumbs.db
