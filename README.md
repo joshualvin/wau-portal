@@ -1,12 +1,11 @@
 # WAU customer portal
 
 Customer portal for Wahyu Agung Utama, self-hosted on the office Windows Server next to wau-erp.
-Customers sign in at **https://portal.wautama.com** to follow their orders, invoices and returns and to send order requests.
+Customers sign in at **https://portal.wautama.com** to send order requests: they pick rolls from the product list (with stock), add PO, delivery address, date and notes, and send. Nothing else is shown to them.
 Staff manage logins and requests at **https://portal.wautama.com/staff/**.
 
 - Reads `si_wa` live, **read only**. Logins and requests are saved in `wau_erp` (tables `portal_*`).
-- Order status: no SJ yet = Order Received · SJ made = Order Processed · SJ on a delivery trip = Shipped · all SJ delivered = Delivered.
-- Invoices: every delivered SJ (`sjheader.nofk`), due = delivery date + TOP. Amounts stay hidden until `show_invoice_amounts` is true.
+- Each request gets a reference (REQ-0001). Staff see it on the Requests tab, create the SO in wau-erp and mark it done.
 - Reached from the internet only through the Cloudflare Tunnel; Apache serves it on 127.0.0.1:8081.
 
 ## Folders
