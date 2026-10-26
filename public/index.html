@@ -278,30 +278,10 @@ button[disabled]{opacity:.55;cursor:wait}
   .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 }
 
-/* products grouped by article */
-#plist.products{grid-template-columns:1fr;gap:10px}
-.art{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--shadow);overflow:hidden}
-.art-h{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
-.art-h:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
-.art-h>span:first-child{flex:1}
-.art-h b{display:block;font-size:1rem}
-.art-h small,.crow small{display:block;color:var(--muted);font-size:.76rem;margin-top:2px}
-.art .chev{width:18px;height:18px;flex:none;color:var(--muted);transition:transform .15s}
-.art.open .chev{transform:rotate(180deg)}
-.colors{border-top:1px solid var(--line)}
-.crow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--line)}
-.crow:first-child{border-top:0}
-.crow b{font-weight:600;font-size:.92rem}
-.cbuy{min-width:96px;display:flex;justify-content:flex-end}
-.btn-sm{padding:7px 16px;min-height:0;font-size:.85rem}
-@media (max-width:420px){.crow{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n b" "s b"}.crow>div:first-child{grid-area:n}.crow>.pill{grid-area:s;justify-self:start}.cbuy{grid-area:b}}
-
 .qty{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--muted)}
 .qty input{width:68px;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;font-size:.95rem;font-weight:600;text-align:center;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
 .qty input::-webkit-outer-spin-button,.qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .qty input:focus{outline:2px solid var(--brand);outline-offset:0;border-color:transparent}
-.crow.picked{background:color-mix(in srgb,var(--good) 7%,transparent)}
-.crow.picked .qty input{border-color:var(--good)}
 .lq{display:inline-flex;align-items:center;gap:4px}
 .line .pill{margin-top:6px}
 .oos,.send-err{font-size:.86rem;padding:10px 12px;border-radius:var(--r-sm);color:var(--ink)}
@@ -328,6 +308,44 @@ details.older[open]>summary{padding-bottom:0}
 .timeline li.part::before{background:linear-gradient(90deg,var(--accent),var(--line))}
 .timeline li.part .d{border-color:var(--accent);background:linear-gradient(90deg,var(--accent) 50%,var(--surface) 50%)}
 
+/* shop: one card per article, its colors as swatches; the cart opens in a side drawer, checkout is its own page */
+.shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,252px),1fr));gap:16px}
+.pcard{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.tile,.mini,.dot-c{background-color:var(--c,var(--bg));background-image:radial-gradient(circle at 30% 30%,rgba(255,255,255,.09) 0 1px,transparent 1.5px),radial-gradient(circle at 70% 60%,rgba(0,0,0,.16) 0 1.2px,transparent 1.7px),linear-gradient(160deg,rgba(255,255,255,.18),rgba(0,0,0,.18));background-size:6px 6px,8px 8px,100% 100%}
+.tile{aspect-ratio:16/10;position:relative;display:grid;place-items:center;transition:background-color .25s var(--ease-out)}
+.tile .pill{position:absolute;top:10px;right:10px}
+.tile.plain span{color:var(--muted);font-size:.9rem;padding:0 16px;text-align:center}
+.pbody{padding:14px 16px 16px;display:grid;gap:10px;flex:1;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto 1fr auto}
+.ptitle{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ptitle h3{overflow-wrap:anywhere;min-width:0}
+.ptitle span{flex:none}
+.sw{display:flex;flex-wrap:wrap;gap:4px;margin-inline:-4px}
+.dot-c{width:36px;height:36px;border:0;cursor:pointer;border-radius:50%;background-clip:content-box;padding:5px;position:relative;box-shadow:inset 0 0 0 5px var(--surface),inset 0 0 0 6px color-mix(in srgb,var(--ink) 18%,transparent)}
+.dot-c[aria-checked="true"]{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 5px var(--surface)}
+.dot-c.oos::after{content:"";position:absolute;inset:5px;border-radius:50%;background:linear-gradient(135deg,transparent calc(50% - 1px),var(--surface) calc(50% - 1px),var(--surface) calc(50% + 1px),transparent calc(50% + 1px))}
+.dot-c.inc::before{content:"";position:absolute;right:2px;bottom:2px;width:9px;height:9px;border-radius:50%;background:var(--good);box-shadow:0 0 0 2px var(--surface)}
+.dot-c:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.pcolor{font-size:.88rem}
+.buy{display:flex;gap:8px;align-items:center;align-self:end}
+.buy .btn{flex:1;min-height:38px;padding-inline:12px}
+.buy .qty input{width:58px}
+.incart{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--good);font-weight:600;margin-top:-2px}
+.incart svg{width:16px;height:16px}
+.mini{width:32px;height:32px;border-radius:8px;flex:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 15%,transparent)}
+.line{align-items:flex-start}
+dialog.drawer{margin:0 0 0 auto;width:min(440px,100vw);height:100dvh;max-height:none;max-width:none;border:0;padding:0;background:var(--surface);color:var(--ink);box-shadow:-20px 0 60px rgba(0,0,0,.25)}
+dialog.drawer[open]{animation:drawer .3s var(--ease-out)}
+dialog.drawer::backdrop{background:rgba(10,10,12,.45)}
+@keyframes drawer{from{transform:translateX(100%)}}
+.dr{height:100%;display:flex;flex-direction:column}
+.dr-h{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 12px 14px 20px;border-bottom:1px solid var(--line)}
+.dr-b{flex:1;overflow:auto;padding:16px 20px}
+.dr-f{display:grid;gap:12px;padding:16px 20px calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.dr-f .grand{border-top:0;padding-top:0}
+.sum-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+@media (max-width:1000px){.checkout .summary{order:-1}}
+@media (max-width:640px){.tile{aspect-ratio:5/2}} /* phones: more products per screen */
+
 /* shipments: one card per delivery note (SJ) */
 .ships{display:grid;gap:12px;margin-top:14px}
 .ship{border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;display:grid;gap:14px}
@@ -347,7 +365,6 @@ details.older[open]>summary{padding-bottom:0}
 :root{--ease-out:cubic-bezier(.16,1,.3,1);--rise:6px}
 @keyframes in{from{opacity:0;transform:translateY(var(--rise))}}
 @keyframes fade{from{opacity:0}}
-@keyframes unfold{from{opacity:0;clip-path:inset(0 0 100% 0)}}
 @keyframes up{from{transform:translateY(100%)}}
 @keyframes pop{40%{transform:scale(1.14)}}
 @keyframes toast{from{opacity:0;transform:translate(-50%,8px)}}
@@ -355,10 +372,7 @@ details.older[open]>summary{padding-bottom:0}
 .content>:nth-child(2){animation-delay:40ms}
 .content>:nth-child(n+3){animation-delay:80ms}
 details.older[open] .rows{animation:in .24s var(--ease-out) backwards}
-.art .chev,details.older .chev{transition:transform .22s var(--ease-out)}
-.art.opening .colors{animation:unfold .28s var(--ease-out) backwards}
-.crow{transition:background-color .2s}
-.crow .qty input{transition:border-color .2s}
+details.older .chev{transition:transform .22s var(--ease-out)}
 .bump{animation:pop .24s var(--ease-out)}
 .cartbar{animation:up .3s var(--ease-out) backwards}
 .toast:not([hidden]){animation:toast .24s var(--ease-out) backwards}
@@ -383,8 +397,9 @@ details.older[open] .rows{animation:in .24s var(--ease-out) backwards}
 @media (prefers-reduced-motion:reduce){
  :root{--rise:0px}
  .timeline li.done::before,.timeline li .d,.drawn circle,.drawn path,.bump{animation:none!important}
- .art.opening .colors,.cartbar{animation-name:fade}
- .art .chev,details.older .chev{transition:none}
+ .cartbar,dialog.drawer[open]{animation-name:fade}
+ .tile{transition:none}
+ details.older .chev{transition:none}
  .btn{transition:background .15s,border-color .15s}.btn:active{transform:none}
 }
 </style>
@@ -392,6 +407,7 @@ details.older[open] .rows{animation:in .24s var(--ease-out) backwards}
 <body>
 <div id="root"></div>
 <dialog class="m" id="modal"><div id="modal-body"></div></dialog>
+<dialog class="drawer" id="cart" aria-labelledby="cart-h"><div class="dr" id="cart-body"></div></dialog>
 <div class="toast" id="toast" role="status" hidden></div>
 <script>
 (function(){
@@ -403,6 +419,7 @@ const I={
  cart:'<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3.5h2.6l2.4 12h11.3l2-8.5H6.2"/>',
  out:'<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/>',
  key:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/>',
+ x:'<path d="M6 6l12 12M18 6L6 18"/>',
  check:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 10"/>'
 };
 const ic=n=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
@@ -418,10 +435,9 @@ const PILL={'Order Received':'p-neutral','Order Processed':'p-info','Shipped':'p
 const pill=t=>`<span class="pill ${PILL[t]||'p-neutral'}">${esc(t)}</span>`;
 const stockPill=p=>p.stock==='in'?`<span class="pill p-good">In stock</span>`:`<span class="pill p-neutral">Out of stock</span>`;
 
-const S={me:null,csrf:'',view:'order',products:null,cart:{},q:'',stockOnly:false,sent:null,open:new Set()};
+const S={me:null,csrf:'',view:'order',products:null,cart:{},q:'',stockOnly:false,sent:null,sel:{}};
 try{S.cart=JSON.parse(localStorage.getItem('wau.cart')||'{}')||{}}catch(_){S.cart={}}
 const saveCart=()=>{try{localStorage.setItem('wau.cart',JSON.stringify(S.cart))}catch(_){}};
-const cartCount=()=>Object.values(S.cart).reduce((a,b)=>a+b,0);
 
 async function api(a,body){
  const opt=body?{method:'POST',headers:{'Content-Type':'application/json','X-CSRF':S.csrf},body:JSON.stringify(body),credentials:'same-origin'}:{credentials:'same-origin'};
@@ -465,94 +481,124 @@ function passwordView(first){
 }
 
 /* ---------------- order page ---------------- */
+/* One card per article: pick a color swatch, type the rolls, Add to cart. The cart opens in a side drawer; Checkout asks for delivery details. */
+const cartLabel=()=>{const n=cartLines().length;return `Cart, ${n} product${n===1?'':'s'}`};
+const cartbarHtml=()=>`<div class="cartbar"><span><b>${rolls(cartRolls())}</b> in your cart</span><button class="btn btn-primary" data-act="cart">View cart</button></div>`;
 function shell(inner){
  return `<div class="main">
   <header class="top">
    <div class="brandrow"><span class="mark">WAU</span><span><b style="font-size:.95rem">${esc(S.me.company)}</b><small>${esc(S.me.name||S.me.email)}</small></span></div>
    <div style="display:flex;gap:6px;align-items:center">
+    <button class="btn btn-ghost cartbtn" data-act="cart" aria-haspopup="dialog" aria-label="${cartLabel()}">${ic('cart')}<span class="hide-xs">Cart</span><span class="dot"${cartLines().length?'':' hidden'}>${cartLines().length}</span></button>
     <button class="btn btn-ghost" data-act="password" title="Change password" aria-label="Change password">${ic('key')}<span class="hide-xs">Password</span></button>
     <button class="btn btn-ghost" data-act="logout" title="Sign out" aria-label="Sign out">${ic('out')}<span class="hide-xs">Sign out</span></button>
    </div>
   </header>
   <nav class="tabs" aria-label="Pages"><div>
-   <button data-go="order" ${S.view==='order'||S.view==='sent'?'aria-current="page"':''}>${ic('plus')}New order</button>
+   <button data-go="order" ${['order','checkout','sent'].includes(S.view)?'aria-current="page"':''}>${ic('plus')}New order</button>
    <button data-go="orders" ${['orders','detail','request'].includes(S.view)?'aria-current="page"':''}>${ic('box')}My orders</button>
   </div></nav>
   <main class="content" id="content" style="margin:0 auto">${inner}</main>
  </div>
- ${S.view==='order'&&cartCount()?`<div class="cartbar"><span><b>${rolls(cartCount())}</b> in your order</span><button class="btn btn-primary" data-act="jump">Review order</button></div>`:''}`;
+ ${S.view==='order'&&cartLines().length?cartbarHtml():''}`;
 }
+const prodOf=k=>S.products&&S.products.find(p=>p.art+'|'+p.color===k);
+function cartLines(){ // cart entries that are still in the product list, with meters
+ if(!S.products)return Object.keys(S.cart).map(k=>({k,p:null,r:S.cart[k],m:0}));
+ return Object.keys(S.cart).map(k=>{const p=prodOf(k);return p&&{k,p,r:S.cart[k],m:S.cart[k]*p.roll_m}}).filter(Boolean);
+}
+const cartRolls=()=>cartLines().reduce((a,x)=>a+x.r,0);
+// Tile color from the color name (Indonesian or English); names it does not know get a plain tile with the name on it.
+const HUES=[['hitam|black|jet','#1d1d1f'],['putih|white|off ?white','#efebe3'],['silver|perak','#b7b9bc'],['abu|abu-abu|grey|gray|charcoal','#7d7f82'],
+ ['navy|dongker|donker','#1f2a44'],['biru|blue','#2f5d9e'],['tosca|teal|turquoise','#2d7a77'],['maroon|marun|burgundy|wine','#5b1e26'],['pink|merah muda|rose','#d39aa5'],
+ ['merah|red','#a3262a'],['ungu|purple|violet','#5b3f73'],['hijau|green','#3e6a45'],['olive|army|zaitun','#5d6236'],['kuning|yellow','#d6af38'],['emas|gold','#b8963e'],
+ ['oranye|orange|jingga','#c8642d'],['mocca|moka|mocha|kopi|coffee','#7a5a45'],['coklat|cokelat|brown|choco','#6b4630'],['tan|camel|caramel|karamel','#b07f50'],
+ ['khaki|kaki','#a89a6a'],['cream|krem|beige|ivory|gading|natural','#e4d8bf']].map(([k,c])=>[new RegExp('\\b('+k+')\\b'),c]);
+function shade(hex,t){const n=parseInt(hex.slice(1),16),f=c=>Math.round(t<0?c*(1+t):c+(255-c)*t);return '#'+[n>>16,n>>8&255,n&255].map(c=>f(c).toString(16).padStart(2,'0')).join('')}
+function hueOf(name){
+ const s=String(name||'').toLowerCase();
+ for(const [re,c] of HUES)if(re.test(s))return /\b(tua|dark|gelap)\b/.test(s)?shade(c,-.3):/\b(muda|light|terang)\b/.test(s)?shade(c,.32):c;
+ return '';
+}
+const tint=h=>h?`style="--c:${h}"`:'';
 function orderView(){
  if(!S.products)return `<div class="panel empty" style="padding:48px 20px">Loading products…</div>`;
- return `<div class="pagehead"><div><h1>New order request</h1><p class="muted">Tap an article to see its colors, type how many rolls you need of each, and send the request. Our sales team creates your sales order (SO) and confirms price and delivery. Out-of-stock colors can still be requested; our team tells you whether and when we can supply them.</p></div></div>
- <div class="grid-side">
-  <section style="display:grid;gap:14px;min-width:0">
-   <div class="filters"><button class="chip" data-act="stockonly" aria-pressed="${S.stockOnly}">In stock only</button>
-    <input class="inp search" id="q" type="search" placeholder="Search article, color or code" value="${esc(S.q)}" aria-label="Search products"></div>
-   <div class="products" id="plist">${productCards()}</div>
-  </section>
-  <aside class="panel summary" id="summary">${summaryHtml()}</aside>
- </div>`;
+ return `<div class="pagehead"><div><h1>New order request</h1><p class="muted">Pick a color, type how many rolls you need and add it to your cart. Our sales team creates your sales order (SO) and confirms price and delivery. Out-of-stock colors can still be requested; our team tells you whether and when we can supply them.</p></div></div>
+ <div class="filters"><button class="chip" data-act="stockonly" aria-pressed="${S.stockOnly}">In stock only</button>
+  <input class="inp search" id="q" type="search" placeholder="Search article, color or code" value="${esc(S.q)}" aria-label="Search products"></div>
+ <div class="shop" id="plist">${shopCards()}</div>`;
 }
-/* Products grouped by article: one row per article, tap it to choose colors.
-   A search that matches a color (or a code) opens those articles and shows only the matching colors. */
-function productCards(){
- const q=S.q.trim().toLowerCase();
- const groups=new Map();
+function shopCards(){
+ const q=S.q.trim().toLowerCase(),groups=new Map();
  for(const p of S.products){
   if(S.stockOnly&&p.stock==='out')continue;
-  const artHit=!q||(p.name+' '+p.art).toLowerCase().includes(q);
-  const colHit=!q||(p.color_name+' '+p.color+' '+p.art+'|'+p.color).toLowerCase().includes(q)||(p.name+' '+p.color_name).toLowerCase().includes(q);
-  if(!artHit&&!colHit)continue;
-  if(!groups.has(p.art))groups.set(p.art,{art:p.art,name:p.name,all:[],hits:[],artHit:false});
-  const g=groups.get(p.art);g.all.push(p);if(colHit&&q)g.hits.push(p);if(artHit)g.artHit=true;
+  if(!groups.has(p.art))groups.set(p.art,{art:p.art,name:p.name,colors:[],hit:!q,match:''});
+  const g=groups.get(p.art);g.colors.push(p);
+  if(q&&(p.name+' '+p.art+' '+p.color_name+' '+p.color).toLowerCase().includes(q)){g.hit=true;if(!g.match&&(p.color_name+' '+p.color).toLowerCase().includes(q))g.match=p.color}
  }
- if(!groups.size)return '<div class="empty panel">No products match your search.</div>';
- return [...groups.values()].slice(0,200).map(g=>{
-  const colors=(q&&!g.artHit)?g.hits:g.all;
-  const open=S.open.has(g.art)||(q&&!g.artHit);
-  const inCart=g.all.reduce((a,p)=>a+(S.cart[p.art+'|'+p.color]||0),0);
-  return `<article class="art${open?' open':''}">
-   <button class="art-h" data-art="${esc(g.art)}" aria-expanded="${open}">
-    <span style="min-width:0"><b>${esc(g.name)}</b><small class="mono">${esc(g.art)} · ${colors.length} color${colors.length===1?'':'s'}</small></span>
-    ${inCart?`<span class="pill p-good">${rolls(inCart)}</span>`:''}
-    <svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-   </button>
-   ${open?`<div class="colors">${colors.map(colorRow).join('')}</div>`:''}
-  </article>`}).join('');
+ const list=[...groups.values()].filter(g=>g.hit);
+ if(!list.length)return '<div class="empty panel">No products match your search.</div>';
+ return list.slice(0,200).map(card).join('');
+}
+function card(g){
+ // the color shown: the one picked on this card, else a color the search matched, else the first in stock
+ const p=g.colors.find(c=>c.color===S.sel[g.art])||g.colors.find(c=>c.color===g.match)||g.colors.find(c=>c.stock==='in')||g.colors[0];
+ const k=p.art+'|'+p.color,n=S.cart[k]||0,hex=hueOf(p.color_name);
+ const inCart=g.colors.reduce((a,c)=>a+(S.cart[c.art+'|'+c.color]||0),0);
+ return `<article class="pcard" data-card="${esc(g.art)}">
+  <div class="tile${hex?'':' plain'}" ${tint(hex)}>${hex?'':`<span>${esc(p.color_name)}</span>`}${stockPill(p)}</div>
+  <div class="pbody">
+   <div class="ptitle"><h3>${esc(g.name)}</h3><span class="mono muted">${esc(g.art)}</span></div>
+   <div class="sw" role="radiogroup" aria-label="Color of ${esc(g.name)}">${g.colors.map(c=>{const h=hueOf(c.color_name),inc=S.cart[c.art+'|'+c.color];
+    return `<button type="button" role="radio" aria-checked="${c.color===p.color}" class="dot-c${h?'':' plain'}${c.stock==='out'?' oos':''}${inc?' inc':''}" ${tint(h)} data-pick="${esc(c.art+'|'+c.color)}" title="${esc(c.color_name)}" aria-label="${esc(c.color_name)}${c.stock==='out'?', out of stock':''}${inc?', '+rolls(inc)+' in cart':''}"></button>`}).join('')}</div>
+   <p class="pcolor"><b>${esc(p.color_name)}</b> <span class="mono muted">${esc(p.color)}</span>${p.roll_m?`<span class="muted"> · ${num(p.roll_m)} m/roll</span>`:''}</p>
+   <form class="buy" data-buy="${esc(k)}" novalidate><label class="qty"><input type="number" inputmode="numeric" min="1" max="999" step="1" placeholder="0" value="${n||''}" name="rolls" aria-label="Rolls of ${esc(g.name+' '+p.color_name)}"><span>rolls</span></label>
+    <button class="btn ${n?'btn-line':'btn-primary'} btn-sm" type="submit">${n?'Update cart':'Add to cart'}</button></form>
+   ${inCart?`<p class="incart">${ic('cart')}${rolls(inCart)} of this article in your cart</p>`:''}
+  </div></article>`;
 }
 // The customer types how many rolls they want of each color.
 function qtyInput(k,n,label){
  return `<label class="qty"><input type="number" inputmode="numeric" min="0" max="999" step="1" placeholder="0" value="${n||''}" data-qty="${esc(k)}" aria-label="${esc(label)}"><span>rolls</span></label>`;
 }
-function colorRow(p){
- const k=p.art+'|'+p.color,n=S.cart[k]||0;
- return `<div class="crow${n?' picked':''}"><div style="min-width:0"><b>${esc(p.color_name)}</b><small class="mono">${esc(p.color)}${p.roll_m?' · '+num(p.roll_m)+' m/roll':''}</small></div>
-  ${stockPill(p)}
-  <div class="cbuy">${qtyInput(k,n,'Rolls of '+p.name+' '+p.color_name)}</div></div>`;
+const oosNote=n=>`<p class="oos">${n===1?'1 color is':n+' colors are'} out of stock. You can still request ${n===1?'it':'them'}; our sales team confirms whether we can supply ${n===1?'it':'them'} and when.</p>`;
+const totalsHtml=L=>`<div class="totals"><div class="grand"><span>${rolls(L.reduce((a,x)=>a+x.r,0))}</span><span>${num(L.reduce((a,x)=>a+x.m,0))} m</span></div></div>`;
+function lineHtml(x,edit){
+ const name=x.p.name+' '+x.p.color_name;
+ return `<div class="line"><span class="mini${hueOf(x.p.color_name)?'':' plain'}" ${tint(hueOf(x.p.color_name))}></span>
+  <div style="min-width:0;flex:1"><b>${esc(x.p.name)}</b> ${esc(x.p.color_name)}<div class="mono muted">${esc(x.p.art)} · ${esc(x.p.color)}${x.m?' · '+num(x.m)+' m':''}</div>${x.p.stock==='out'?'<span class="pill p-warn">Out of stock</span>':''}</div>
+  ${edit?`<span class="lq">${qtyInput(x.k,x.r,'Rolls of '+name)}<button type="button" class="rm" data-rm="${esc(x.k)}" aria-label="Remove ${esc(name)}">×</button></span>`:`<span class="num" style="white-space:nowrap">${rolls(x.r)}</span>`}</div>`;
 }
-function summaryHtml(){
- const ks=Object.keys(S.cart).filter(k=>S.products.find(p=>p.art+'|'+p.color===k));
- if(!ks.length)return `<div class="panel-b"><h2>Your order</h2><p class="muted" style="margin-top:8px">No rolls yet. Open an article and type how many rolls you need of a color.</p></div>`;
- const lines=ks.map(k=>{const p=S.products.find(x=>x.art+'|'+x.color===k);return {k,p,r:S.cart[k],m:S.cart[k]*p.roll_m}});
- const tr=lines.reduce((a,x)=>a+x.r,0),tm=lines.reduce((a,x)=>a+x.m,0);
- const oos=lines.filter(x=>x.p.stock==='out').length,them=oos===1?'it':'them';
+function cartHtml(){
+ const L=cartLines(),oos=L.filter(x=>x.p.stock==='out').length;
+ return `<div class="dr-h"><h2 id="cart-h">Your cart</h2><button class="btn btn-ghost" data-act="closecart" aria-label="Close cart">${ic('x')}</button></div>
+ ${L.length?`<div class="dr-b"><div class="lines">${L.map(x=>lineHtml(x,true)).join('')}</div></div>
+ <div class="dr-f">${totalsHtml(L)}${oos?oosNote(oos):''}<p class="note">Your agreed prices are applied when our sales team creates the SO.</p>
+  <button class="btn btn-primary" data-act="checkout">Checkout</button><button class="btn btn-ghost" data-act="closecart">Keep shopping</button></div>`
+ :`<div class="dr-b empty"><p>Your cart is empty.</p><p class="note" style="margin-top:6px">Pick a color on a product, type the rolls and press Add to cart.</p></div>`}`;
+}
+function checkoutView(){
+ if(!S.products)return `<div class="panel empty" style="padding:48px 20px">Loading your cart…</div>`;
+ const L=cartLines(),oos=L.filter(x=>x.p.stock==='out').length;
+ const back=`<button class="back" data-go="order">${ic('left')}Back to products</button>`;
+ if(!L.length)return `<div>${back}<div class="panel empty" style="padding:40px 20px"><p>Your cart is empty.</p></div></div>`;
  const tomorrow=new Date(Date.now()+864e5).toISOString().slice(0,10);
- return `<form class="panel-b form" id="orderform" novalidate>
-  <h2>Your order</h2>
-  <div class="lines">${lines.map(x=>`<div class="line"><div style="min-width:0"><b>${esc(x.p.name)}</b> ${esc(x.p.color_name)}<div class="mono muted">${esc(x.p.art)} · ${esc(x.p.color)}${x.m?' · '+num(x.m)+' m':''}</div>${x.p.stock==='out'?'<span class="pill p-warn">Out of stock</span>':''}</div>
-   <span class="lq">${qtyInput(x.k,x.r,"Rolls of "+x.p.name+" "+x.p.color_name)}<button type="button" class="rm" data-rm="${esc(x.k)}" aria-label="Remove">×</button></span></div>`).join('')}</div>
-  <div class="totals"><div class="grand"><span>${rolls(tr)}</span><span>${num(tm)} m</span></div></div>
-  <label class="f" for="o-po">Your PO number<input class="inp" id="o-po" maxlength="60" placeholder="Optional"></label>
-  <label class="f" for="o-addr">Deliver to<input class="inp" id="o-addr" maxlength="300" placeholder="Your usual address"></label>
-  <label class="f" for="o-date">Requested delivery date<input class="inp" id="o-date" type="date" min="${tomorrow}"></label>
-  <label class="f" for="o-notes">Notes for our team<textarea class="inp" id="o-notes" maxlength="1000" placeholder="Unloading hours, contact on site, special color or spec"></textarea></label>
-  <p class="note">Your agreed prices are applied when our sales team creates the SO.</p>
-  ${oos?`<p class="oos">${oos===1?'1 color is':oos+' colors are'} out of stock. You can still request ${them}; our sales team confirms whether we can supply ${them} and when.</p>`:''}
-  <p class="send-err" id="o-err" role="alert" hidden></p>
-  <button class="btn btn-primary" type="submit" data-busy="Sending…">Send order request</button>
-  <button class="btn btn-ghost" type="button" data-act="clear">Clear order</button>
- </form>`;
+ return `<div>${back}<div class="pagehead"><div><h1>Checkout</h1><p class="muted">Tell us where and when to deliver. Our sales team creates your SO and confirms price and delivery.</p></div></div></div>
+ <div class="grid-side checkout">
+  <form class="panel panel-b form" id="orderform" novalidate>
+   <h2>Delivery</h2>
+   <label class="f" for="o-po">Your PO number<input class="inp" id="o-po" maxlength="60" placeholder="Optional"></label>
+   <label class="f" for="o-addr">Deliver to<input class="inp" id="o-addr" maxlength="300" placeholder="Your usual address"></label>
+   <label class="f" for="o-date">Requested delivery date<input class="inp" id="o-date" type="date" min="${tomorrow}"></label>
+   <label class="f" for="o-notes">Notes for our team<textarea class="inp" id="o-notes" maxlength="1000" placeholder="Unloading hours, contact on site, special color or spec"></textarea></label>
+   <p class="note">Your agreed prices are applied when our sales team creates the SO.</p>
+   ${oos?oosNote(oos):''}
+   <p class="send-err" id="o-err" role="alert" hidden></p>
+   <button class="btn btn-primary" type="submit" data-busy="Sending…">Send order request</button>
+  </form>
+  <aside class="panel summary"><div class="panel-b form"><div class="sum-h"><h2>Your order</h2><button class="link" data-act="cart">Edit cart</button></div>
+   <div class="lines">${L.map(x=>lineHtml(x,false)).join('')}</div>${totalsHtml(L)}</div></aside>
+ </div>`;
 }
 function sentView(){
  const c=S.contact||{};
@@ -578,9 +624,10 @@ async function render(){
   catch(e){$('#content').innerHTML=`<div class="panel empty" style="padding:40px 20px"><p>${esc(e.message)}</p><p style="margin-top:12px"><button class="btn btn-line" data-go="${v==='orders'?'orders':'orders'}">Try again</button></p></div>`}
   return;
  }
- root.innerHTML=shell(S.view==='sent'?sentView():orderView());
- if(S.view==='order'&&!S.products){
-  try{S.products=(await api('products')).products;root.innerHTML=shell(orderView())}
+ const page=()=>S.view==='sent'?sentView():S.view==='checkout'?checkoutView():orderView();
+ root.innerHTML=shell(page());
+ if((S.view==='order'||S.view==='checkout')&&!S.products){
+  try{S.products=(await api('products')).products;root.innerHTML=shell(page())}
   catch(e){$('#content').innerHTML=`<div class="panel empty" style="padding:40px 20px"><p>${esc(e.message)}</p><p style="margin-top:12px"><button class="btn btn-line" data-act="reload">Try again</button></p></div>`}
  }
 }
@@ -662,15 +709,27 @@ async function requestView(id){
   ${r.data.deliver_to||r.data.date||r.data.notes?`<div class="panel-b"><dl class="kv">${r.data.deliver_to?`<dt>Deliver to</dt><dd>${esc(r.data.deliver_to)}</dd>`:''}${r.data.date?`<dt>Wanted by</dt><dd>${dt(r.data.date)}</dd>`:''}${r.data.notes?`<dt>Notes</dt><dd>${esc(r.data.notes)}</dd>`:''}</dl></div>`:''}</section>`;
 }
 
-function refresh(){ // keep typed text and scroll position while the order changes
- if(!$('#plist'))return render();
- const keep={};document.querySelectorAll('#orderform .inp').forEach(x=>keep[x.id]=x.value);
- $('#plist').innerHTML=productCards();$('#summary').innerHTML=summaryHtml();
- Object.keys(keep).forEach(id=>{const x=document.getElementById(id);if(x)x.value=keep[id]});
- const bar=document.querySelector('.cartbar'),n=cartCount();
- if(n&&!bar)document.body.querySelector('#root').insertAdjacentHTML('beforeend',`<div class="cartbar"><span><b>${rolls(n)}</b> in your order</span><button class="btn btn-primary" data-act="jump">Review order</button></div>`);
- else if(bar&&!n)bar.remove();else if(bar&&bar.querySelector('b').textContent!==rolls(n)){bar.querySelector('b').textContent=rolls(n);bump(bar.querySelector('b'))}
+function syncCart(){ // header count, phone cart bar, product cards, open cart and checkout all follow the cart
+ const n=cartLines().length,btn=document.querySelector('.cartbtn'),dot=btn&&btn.querySelector('.dot');
+ if(dot){if(dot.textContent!==String(n)){dot.textContent=n;bump(dot)}dot.hidden=!n;btn.setAttribute('aria-label',cartLabel())}
+ const bar=document.querySelector('.cartbar');
+ if(S.view==='order'&&n&&!bar)$('#root').insertAdjacentHTML('beforeend',cartbarHtml());
+ else if(bar&&!n)bar.remove();
+ else if(bar){const b=bar.querySelector('b');if(b.textContent!==rolls(cartRolls())){b.textContent=rolls(cartRolls());bump(b)}}
+ if($('#plist'))redraw('#plist',shopCards);
+ if($('#cart').open)redraw('#cart-body',cartHtml,'[data-act=closecart]');
+ if(S.view==='checkout'&&$('#content')){const keep={};document.querySelectorAll('#orderform .inp').forEach(x=>keep[x.id]=x.value);
+  $('#content').innerHTML=checkoutView();Object.keys(keep).forEach(id=>{const x=document.getElementById(id);if(x)x.value=keep[id]})}
 }
+// Redraw a region and put focus back on the same control (a swatch, a rolls box, a button), or on a fallback.
+function redraw(sel,html,fallback){
+ const box=$(sel),a=document.activeElement,card=a&&box.contains(a)&&a.closest('[data-card]');
+ const key=!a||!box.contains(a)?null:a.dataset.pick?`[data-pick="${CSS.escape(a.dataset.pick)}"]`:a.dataset.qty?`[data-qty="${CSS.escape(a.dataset.qty)}"]`
+  :card?`[data-card="${CSS.escape(card.dataset.card)}"] ${a.name==='rolls'?'input':'button[type=submit]'}`:a.dataset.act?`[data-act="${a.dataset.act}"]`:null;
+ box.innerHTML=html();
+ if(key||fallback){const x=box.querySelector(key||fallback)||(fallback&&box.querySelector(fallback));if(x&&(key||a===document.body))x.focus({preventScroll:true})}
+}
+function openCart(){$('#cart-body').innerHTML=cartHtml();const d=$('#cart');if(!d.open)d.showModal()}
 async function boot(){
  try{const m=await api('me');S.me=m.user;S.contact=m.contact}catch(e){$('#root').innerHTML=`<div class="login"><div class="login-card"><h1>Portal unavailable</h1><p class="muted">${esc(e.message)}</p></div></div>`;return}
  render();
@@ -679,6 +738,10 @@ async function boot(){
 /* ---------------- events ---------------- */
 document.addEventListener('submit',async e=>{
  e.preventDefault();const f=e.target,btn=f.querySelector('button[type=submit]');
+ if(f.dataset.buy){ // Add to cart / Update cart on a product card: the typed number replaces what is in the cart
+  const k=f.dataset.buy,p=prodOf(k),v=f.elements.rolls.value.trim(),had=S.cart[k]||0;
+  if(v===''||+v<1){if(had){delete S.cart[k];saveCart();syncCart();toast(`Removed ${p.name} ${p.color_name} from your cart.`)}else{f.elements.rolls.focus();toast('Type how many rolls you need first.')}return}
+  setQty(k,v);syncCart();toast(`${had?'Cart updated':'Added to cart'}: ${rolls(S.cart[k])} of ${p.name} ${p.color_name}.`);return}
  const err=(id,m)=>{const p=$(id);if(p){p.textContent=m;p.hidden=!m}};
  const label=btn&&btn.textContent;
  if(btn){btn.disabled=true;if(btn.dataset.busy)btn.textContent=btn.dataset.busy}
@@ -691,7 +754,7 @@ document.addEventListener('submit',async e=>{
    err('#o-err','');
    const items=Object.keys(S.cart).map(k=>{const [art,color]=k.split('|');return {art,color,rolls:S.cart[k]}});
    const r=await api('order_request',{items,po:$('#o-po').value,deliver_to:$('#o-addr').value,date:$('#o-date').value,notes:$('#o-notes').value});
-   S.sent={ref:r.ref,rolls:cartCount()};S.cart={};saveCart();S.view='sent';render();window.scrollTo(0,0);return}
+   S.sent={ref:r.ref,rolls:cartRolls()};S.cart={};saveCart();S.view='sent';render();window.scrollTo(0,0);return}
  }catch(ex){
   // the error stays next to the button that failed (kept until the next try), the order and typed details stay as they were
   const id={login:'#l-err',pwform:'#p-err',orderform:'#o-err'}[f.id];
@@ -711,31 +774,16 @@ function setQty(k,v){
  const n=Math.max(0,Math.min(999,parseInt(v,10)||0));
  if(n)S.cart[k]=n;else delete S.cart[k];saveCart();
 }
-function refreshSummary(){ // redraw the order summary, keeping what was typed in its form
- const keep={};document.querySelectorAll('#orderform .inp').forEach(x=>keep[x.id]=x.value);
- $('#summary').innerHTML=summaryHtml();
- Object.keys(keep).forEach(id=>{const x=document.getElementById(id);if(x)x.value=keep[id]});
- const bar=document.querySelector('.cartbar'),n=cartCount();
- if(n&&!bar)$('#root').insertAdjacentHTML('beforeend',`<div class="cartbar"><span><b>${rolls(n)}</b> in your order</span><button class="btn btn-primary" data-act="jump">Review order</button></div>`);
- else if(bar&&!n)bar.remove();else if(bar&&bar.querySelector('b').textContent!==rolls(n)){bar.querySelector('b').textContent=rolls(n);bump(bar.querySelector('b'))}
-}
 document.addEventListener('input',e=>{
- if(e.target.id==='q'){S.q=e.target.value;$('#plist').innerHTML=productCards();return}
+ if(e.target.id==='q'){S.q=e.target.value;redraw('#plist',shopCards);return}
  if(e.target.id==='oq'){findOrders(e.target.value);return}
  const k=e.target.dataset&&e.target.dataset.qty;if(!k)return;
- setQty(k,e.target.value);
- if(e.target.closest('#plist')){e.target.closest('.crow').classList.toggle('picked',!!S.cart[k]);refreshSummary()}
- else{const tr=Object.values(S.cart).reduce((a,b)=>a+b,0);const g=document.querySelector('#summary .grand span');if(g)g.textContent=rolls(tr)}
+ setQty(k,e.target.value); // while typing in the cart only the totals change; the lines redraw when the box is left
+ const g=document.querySelectorAll('#cart .grand span');if(g.length){g[0].textContent=rolls(cartRolls());g[1].textContent=num(cartLines().reduce((a,x)=>a+x.m,0))+' m'}
 });
-document.addEventListener('change',e=>{const k=e.target.dataset&&e.target.dataset.qty;if(k&&e.target.closest('#summary'))refresh();if(k&&e.target.closest('#plist'))refreshHeaders()});
+document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.qty)syncCart()});
 document.addEventListener('toggle',e=>{const k=e.target.dataset&&e.target.dataset.fold;if(k){S.folds=S.folds||{};S.folds[k]=e.target.open}},true);
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.qty){e.preventDefault();e.target.blur()}});
-function refreshHeaders(){ // roll count on each article row
- document.querySelectorAll('#plist .art').forEach(a=>{const art=a.querySelector('.art-h').dataset.art;
-  const n=Object.keys(S.cart).filter(k=>k.split('|')[0]===art).reduce((x,k)=>x+S.cart[k],0);
-  let p=a.querySelector('.art-h .pill');if(n&&!p){a.querySelector('.chev').insertAdjacentHTML('beforebegin','<span class="pill p-good"></span>');p=a.querySelector('.art-h .pill')}
-  if(p){if(!n)p.remove();else if(p.textContent!==rolls(n)){p.textContent=rolls(n);bump(p)}}});
-}
 document.addEventListener('click',async e=>{
  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
  if(d.act==='logout'){try{await api('logout',{})}catch(_){}S.me=null;S.products=null;S.view='order';render();return}
@@ -745,17 +793,14 @@ document.addEventListener('click',async e=>{
  if(d.openOrder){S.view='detail';S.detail=d.openOrder;window.scrollTo(0,0);render();return}
  if(d.openReq){S.view='request';S.reqId=d.openReq;window.scrollTo(0,0);render();return}
  if(d.act==='reload'){S.products=null;render();return}
- if(d.act==='stockonly'){S.stockOnly=!S.stockOnly;b.setAttribute('aria-pressed',S.stockOnly);$('#plist').innerHTML=productCards();return}
- if(d.act==='jump'){$('#summary').scrollIntoView({behavior:'smooth',block:'start'});return}
- if(d.act==='clear'){S.cart={};saveCart();refresh();return}
- if(d.art){const opening=!S.open.has(d.art);opening?S.open.add(d.art):S.open.delete(d.art);$('#plist').innerHTML=productCards();
-  // the list is redrawn: keep focus on the article that was tapped, and unfold only that one
-  const h=$('#plist').querySelector(`.art-h[data-art="${CSS.escape(d.art)}"]`);if(h){h.focus({preventScroll:true});if(opening)h.parentNode.classList.add('opening')}return}
- if(d.rm){delete S.cart[d.rm];saveCart();refresh();return}
- if(d.add){S.cart[d.add]=1;saveCart();refresh();return}
- if(d.inc){S.cart[d.inc]=Math.min(999,(S.cart[d.inc]||0)+1);saveCart();refresh();return}
- if(d.dec){const n=(S.cart[d.dec]||0)-1;if(n>0)S.cart[d.dec]=n;else delete S.cart[d.dec];saveCart();refresh();return}
+ if(d.act==='stockonly'){S.stockOnly=!S.stockOnly;b.setAttribute('aria-pressed',S.stockOnly);redraw('#plist',shopCards);return}
+ if(d.act==='cart'){openCart();return}
+ if(d.act==='closecart'){$('#cart').close();return}
+ if(d.act==='checkout'){$('#cart').close();S.view='checkout';window.scrollTo(0,0);render();return}
+ if(d.pick){const [art,color]=d.pick.split('|');S.sel[art]=color;redraw('#plist',shopCards);return}
+ if(d.rm){delete S.cart[d.rm];saveCart();syncCart();return}
 });
+$('#cart').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.close()}); // tap outside the drawer closes it
 boot();
 })();
 
