@@ -11,7 +11,12 @@ function q_rows($sql, $params = array()) { $st = db()->prepare($sql); $st->execu
 function marks($list) { return implode(',', array_fill(0, count($list), '?')); }
 function chunks_of($list) { return array_chunk(array_values(array_unique($list)), 300); }
 function d10($v) { $v = substr((string)$v, 0, 10); return ($v === '' || $v === '0000-00-00') ? null : $v; }
-function tr($v) { return trim((string)$v); }
+// Trim, and turn old Windows (latin) characters from si_wa into proper UTF-8 so names show correctly.
+function tr($v) {
+  $v = trim((string)$v);
+  if ($v !== '' && !preg_match('//u', $v) && function_exists('mb_convert_encoding')) $v = mb_convert_encoding($v, 'UTF-8', 'Windows-1252');
+  return $v;
+}
 function add_days($date, $days) { return $date ? date('Y-m-d', strtotime($date . ' +' . (int)$days . ' days')) : null; }
 
 // Small file cache for figures shared by every customer (free stock), so a busy hour does not re-read the whole stock table.
@@ -21,7 +26,7 @@ function cached($key, $ttl, $fn) {
   $file = $dir . DIRECTORY_SEPARATOR . md5($key) . '.json';
   if (is_file($file) && time() - filemtime($file) < $ttl) { $v = json_decode((string)@file_get_contents($file), true); if (is_array($v)) return $v; }
   $v = call_user_func($fn);
-  @file_put_contents($file, json_encode($v), LOCK_EX);
+  @file_put_contents($file, json_encode($v, JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR), LOCK_EX);
   return $v;
 }
 

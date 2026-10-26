@@ -9,7 +9,21 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
-function out($data, $code = 200) { http_response_code($code); echo json_encode($data); exit; }
+// Never print PHP errors into the answer. A crash is written to the PHP error log and the customer gets a clear message.
+ini_set('display_errors', '0');
+@set_time_limit(90);
+register_shutdown_function(function () {
+  $e = error_get_last();
+  if ($e && in_array($e['type'], array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR))) {
+    error_log('WAU portal: ' . $e['message'] . ' in ' . $e['file'] . ':' . $e['line']);
+    if (!headers_sent()) { http_response_code(500); header('Content-Type: application/json; charset=utf-8'); }
+    echo json_encode(array('ok' => false, 'error' => 'The portal had a problem loading this page. Please try again in a minute, or contact our sales team.'));
+  }
+});
+
+// Names in si_wa may hold old (non UTF-8) characters: replace them instead of failing the whole answer.
+define('JSON_FLAGS', JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR);
+function out($data, $code = 200) { http_response_code($code); echo json_encode($data, JSON_FLAGS); exit; }
 function bad($msg, $code = 400) { out(array('ok' => false, 'error' => $msg), $code); }
 
 try { db(); } catch (Exception $e) { bad('The portal is not available right now. Please try again later.', 503); }

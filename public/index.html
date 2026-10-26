@@ -310,7 +310,8 @@ const cartCount=()=>Object.values(S.cart).reduce((a,b)=>a+b,0);
 async function api(a,body){
  const opt=body?{method:'POST',headers:{'Content-Type':'application/json','X-CSRF':S.csrf},body:JSON.stringify(body),credentials:'same-origin'}:{credentials:'same-origin'};
  let r,j;
- try{r=await fetch('api/portal.php?a='+a,opt);j=await r.json()}catch(e){throw new Error('Cannot reach the portal. Check your internet connection and try again.')}
+ try{r=await fetch('api/portal.php?a='+a,opt)}catch(e){throw new Error('Cannot reach the portal. Check your internet connection and try again.')}
+ try{j=await r.json()}catch(e){throw new Error('The portal had a problem (code '+r.status+'). Please try again in a minute, or contact our sales team.')}
  if(r.status===401&&a!=='login'){S.me=null;render();throw new Error('Please sign in again.')}
  if(!j.ok)throw new Error(j.error||'Something went wrong.');
  if(j.csrf)S.csrf=j.csrf;
