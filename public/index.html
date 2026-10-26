@@ -302,6 +302,10 @@ button[disabled]{opacity:.55;cursor:wait}
 .crow.picked{background:color-mix(in srgb,var(--good) 7%,transparent)}
 .crow.picked .qty input{border-color:var(--good)}
 .lq{display:inline-flex;align-items:center;gap:4px}
+.line .pill{margin-top:6px}
+.oos,.send-err{font-size:.86rem;padding:10px 12px;border-radius:var(--r-sm);color:var(--ink)}
+.oos{background:var(--warn-soft)}
+.send-err{background:var(--bad-soft);animation:in .2s var(--ease-out,ease-out) backwards}
 .rm{border:0;background:none;color:var(--muted);font-size:1.2rem;width:30px;height:34px;cursor:pointer;border-radius:8px}
 .rm:hover{background:var(--line);color:var(--ink)}
 
@@ -441,7 +445,7 @@ function loginView(){
    <label class="f" for="l-email">Email<input class="inp" id="l-email" type="email" autocomplete="username" required></label>
    <label class="f" for="l-pass">Password<input class="inp" id="l-pass" type="password" autocomplete="current-password" required></label>
    <p class="note" id="l-err" style="color:var(--bad)" hidden></p>
-   <button class="btn btn-primary" type="submit">Sign in</button>
+   <button class="btn btn-primary" type="submit" data-busy="Signing in…">Sign in</button>
   </form>
   <p class="note">Accounts are created by our sales team. Need access or forgot your password? Email <b>${esc(c.email)}</b> or call <b>${esc(c.phone)}</b>.</p>
  </div></div>`;
@@ -454,7 +458,7 @@ function passwordView(first){
    <label class="f" for="p-new">New password<input class="inp" id="p-new" type="password" autocomplete="new-password" required></label>
    <label class="f" for="p-new2">Repeat new password<input class="inp" id="p-new2" type="password" autocomplete="new-password" required></label>
    <p class="note" id="p-err" style="color:var(--bad)" hidden></p>
-   <button class="btn btn-primary" type="submit">Save password</button>
+   <button class="btn btn-primary" type="submit" data-busy="Saving…">Save password</button>
    <button class="btn btn-ghost" type="button" data-act="${first?'logout':'back'}">${first?'Sign out':'Cancel'}</button>
   </form></div></div>`;
 }
@@ -479,7 +483,7 @@ function shell(inner){
 }
 function orderView(){
  if(!S.products)return `<div class="panel empty" style="padding:48px 20px">Loading products…</div>`;
- return `<div class="pagehead"><div><h1>New order request</h1><p class="muted">Tap an article to see its colors, type how many rolls you need of each, and send the request. Our sales team creates your sales order (SO) and confirms price and delivery.</p></div></div>
+ return `<div class="pagehead"><div><h1>New order request</h1><p class="muted">Tap an article to see its colors, type how many rolls you need of each, and send the request. Our sales team creates your sales order (SO) and confirms price and delivery. Out-of-stock colors can still be requested; our team tells you whether and when we can supply them.</p></div></div>
  <div class="grid-side">
   <section style="display:grid;gap:14px;min-width:0">
    <div class="filters"><button class="chip" data-act="stockonly" aria-pressed="${S.stockOnly}">In stock only</button>
@@ -531,10 +535,11 @@ function summaryHtml(){
  if(!ks.length)return `<div class="panel-b"><h2>Your order</h2><p class="muted" style="margin-top:8px">No rolls yet. Open an article and type how many rolls you need of a color.</p></div>`;
  const lines=ks.map(k=>{const p=S.products.find(x=>x.art+'|'+x.color===k);return {k,p,r:S.cart[k],m:S.cart[k]*p.roll_m}});
  const tr=lines.reduce((a,x)=>a+x.r,0),tm=lines.reduce((a,x)=>a+x.m,0);
+ const oos=lines.filter(x=>x.p.stock==='out').length,them=oos===1?'it':'them';
  const tomorrow=new Date(Date.now()+864e5).toISOString().slice(0,10);
  return `<form class="panel-b form" id="orderform" novalidate>
   <h2>Your order</h2>
-  <div class="lines">${lines.map(x=>`<div class="line"><div style="min-width:0"><b>${esc(x.p.name)}</b> ${esc(x.p.color_name)}<div class="mono muted">${esc(x.p.art)} · ${esc(x.p.color)}${x.m?' · '+num(x.m)+' m':''}</div></div>
+  <div class="lines">${lines.map(x=>`<div class="line"><div style="min-width:0"><b>${esc(x.p.name)}</b> ${esc(x.p.color_name)}<div class="mono muted">${esc(x.p.art)} · ${esc(x.p.color)}${x.m?' · '+num(x.m)+' m':''}</div>${x.p.stock==='out'?'<span class="pill p-warn">Out of stock</span>':''}</div>
    <span class="lq">${qtyInput(x.k,x.r,"Rolls of "+x.p.name+" "+x.p.color_name)}<button type="button" class="rm" data-rm="${esc(x.k)}" aria-label="Remove">×</button></span></div>`).join('')}</div>
   <div class="totals"><div class="grand"><span>${rolls(tr)}</span><span>${num(tm)} m</span></div></div>
   <label class="f" for="o-po">Your PO number<input class="inp" id="o-po" maxlength="60" placeholder="Optional"></label>
@@ -542,7 +547,9 @@ function summaryHtml(){
   <label class="f" for="o-date">Requested delivery date<input class="inp" id="o-date" type="date" min="${tomorrow}"></label>
   <label class="f" for="o-notes">Notes for our team<textarea class="inp" id="o-notes" maxlength="1000" placeholder="Unloading hours, contact on site, special color or spec"></textarea></label>
   <p class="note">Your agreed prices are applied when our sales team creates the SO.</p>
-  <button class="btn btn-primary" type="submit">Send order request</button>
+  ${oos?`<p class="oos">${oos===1?'1 color is':oos+' colors are'} out of stock. You can still request ${them}; our sales team confirms whether we can supply ${them} and when.</p>`:''}
+  <p class="send-err" id="o-err" role="alert" hidden></p>
+  <button class="btn btn-primary" type="submit" data-busy="Sending…">Send order request</button>
   <button class="btn btn-ghost" type="button" data-act="clear">Clear order</button>
  </form>`;
 }
@@ -672,20 +679,24 @@ async function boot(){
 document.addEventListener('submit',async e=>{
  e.preventDefault();const f=e.target,btn=f.querySelector('button[type=submit]');
  const err=(id,m)=>{const p=$(id);if(p){p.textContent=m;p.hidden=!m}};
- if(btn)btn.disabled=true;
+ const label=btn&&btn.textContent;
+ if(btn){btn.disabled=true;if(btn.dataset.busy)btn.textContent=btn.dataset.busy}
  try{
   if(f.id==='login'){err('#l-err','');await api('login',{email:$('#l-email').value,password:$('#l-pass').value});const m=await api('me');S.me=m.user;S.view='order';S.products=null;render();return}
   if(f.id==='pwform'){
    err('#p-err','');if($('#p-new').value!==$('#p-new2').value)throw new Error('The two new passwords are not the same.');
    await api('password',{current:$('#p-cur').value,new:$('#p-new').value});S.me.must_change=0;S.view='order';toast('Password saved.');render();return}
   if(f.id==='orderform'){
+   err('#o-err','');
    const items=Object.keys(S.cart).map(k=>{const [art,color]=k.split('|');return {art,color,rolls:S.cart[k]}});
    const r=await api('order_request',{items,po:$('#o-po').value,deliver_to:$('#o-addr').value,date:$('#o-date').value,notes:$('#o-notes').value});
    S.sent={ref:r.ref,rolls:cartCount()};S.cart={};saveCart();S.view='sent';render();window.scrollTo(0,0);return}
  }catch(ex){
-  const id=f.id==='login'?'#l-err':f.id==='pwform'?'#p-err':null;
-  if(id)err(id,ex.message);else toast(ex.message);
- }finally{if(btn)btn.disabled=false}
+  // the error stays next to the button that failed (kept until the next try), the order and typed details stay as they were
+  const id={login:'#l-err',pwform:'#p-err',orderform:'#o-err'}[f.id];
+  const msg=f.id==='orderform'?'Your order request was not sent. '+ex.message:ex.message;
+  if(id&&$(id))err(id,msg);else toast(msg);
+ }finally{if(btn){btn.disabled=false;btn.textContent=label}}
 });
 // My orders: find by SO, SJ, PO or product. Opens closed sections that hold a match.
 function findOrders(v){
