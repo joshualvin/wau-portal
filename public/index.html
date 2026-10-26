@@ -434,7 +434,7 @@ const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','De
 const dt=v=>{if(!v)return '';const [y,m,d]=String(v).slice(0,10).split('-');return `${+d} ${MON[+m-1]} ${y}`};
 const STEPS=['Order Received','Order Processed','Shipped','Delivered'];
 const PILL={'Order Received':'p-neutral','Order Processed':'p-info','Shipped':'p-accent','Delivered':'p-good','Partly delivered':'p-warn',
- 'Being prepared':'p-info','Sent':'p-warn','Received by our team':'p-info','SO created':'p-good','Cannot fulfil':'p-bad'};
+ 'Being prepared':'p-info','Sent':'p-warn','Received by our team':'p-info','Being processed':'p-info','SO created':'p-good','Cannot fulfil':'p-bad'};
 const pill=t=>`<span class="pill ${PILL[t]||'p-neutral'}">${esc(t)}</span>`;
 const stockPill=p=>p.stock==='in'?`<span class="pill p-good">In stock</span>`:`<span class="pill p-neutral">Out of stock</span>`;
 
@@ -703,7 +703,7 @@ async function detailView(no){
 async function requestView(id){
  if(!S.reqs)S.reqs=(await api('orders')).requests;
  const r=S.reqs.find(x=>x.id==id);if(!r){S.view='orders';return ordersView()}
- const msg=r.status==='SO created'?`Your sales order <b class="mono">${esc(r.so_number)}</b> was created.`:r.status==='Cannot fulfil'?'Our team could not fulfil this request.':'Our sales team checks your request and creates your sales order. Tracking starts once the SO is made.';
+ const msg=r.status==='SO created'?`Your sales order <b class="mono">${esc(r.so_number)}</b> was created.`:r.status==='Cannot fulfil'?'Our team could not fulfil this request.':r.status==='Being processed'?'Our sales team has confirmed your request and is making your sales order. Tracking starts once the SO is made.':'Our sales team checks your request and creates your sales order. Tracking starts once the SO is made.';
  return `<div><button class="back" data-go="orders">${ic('left')}My orders</button>
   <div class="pagehead"><div><h1>${esc(r.ref)}</h1><p class="muted">Sent ${dt(r.created_at)}${r.data.po?' · Your PO '+esc(r.data.po):''}</p></div>${pill(r.status)}</div></div>
  <div class="alert" style="background:var(--${r.status==='Cannot fulfil'?'bad':r.status==='SO created'?'good':'warn'}-soft)"><span>${msg}${r.staff_note?' '+esc(r.staff_note):''}</span>${r.status==='SO created'&&r.so_number?`<button class="btn btn-line" data-open-order="${esc(r.so_number)}">Track ${esc(r.so_number)}</button>`:''}</div>

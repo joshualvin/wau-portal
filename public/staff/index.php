@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
   if ($do === 'status') {
     $id = (int)$_POST['id'];
-    $allowed = array('Received by our team', 'SO created', 'Cannot fulfil', 'Approved', 'Rejected', 'Resolved');
+    $allowed = array('Received by our team', 'Being processed', 'SO created', 'Cannot fulfil', 'Approved', 'Rejected', 'Resolved');
     $status = in_array($_POST['status'], $allowed) ? $_POST['status'] : 'Received by our team';
     $pdo->prepare('REPLACE INTO ' . E('portal_request_status') . ' (request_id, status, so_number, note, updated_at, updated_by) VALUES (?, ?, ?, ?, ?, ?)')
       ->execute(array($id, $status, substr(trim((string)$_POST['so']), 0, 40), substr(trim((string)$_POST['note']), 0, 500), now(), staff()));
@@ -214,7 +214,7 @@ button:active{transform:translateY(1px)}
         <?= $r['so_number'] ? '<br><span class="mono">' . h($r['so_number']) . '</span>' : '' ?><?= $r['note'] ? '<br><span class="muted">' . h($r['note']) . '</span>' : '' ?></td>
       <td><details><summary>Update</summary><form method="post" style="display:grid;gap:6px;margin-top:8px;min-width:220px">
         <input type="hidden" name="csrf" value="<?= $csrf ?>"><input type="hidden" name="do" value="status"><input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
-        <select name="status"><?php foreach ($isOrder ? array('Received by our team', 'SO created', 'Cannot fulfil') : array('Received by our team', 'Approved', 'Rejected', 'Resolved') as $s)
+        <select name="status"><?php foreach ($isOrder ? array('Received by our team', 'Being processed', 'SO created', 'Cannot fulfil') : array('Received by our team', 'Approved', 'Rejected', 'Resolved') as $s)
           echo '<option' . ($s === $state ? ' selected' : '') . '>' . h($s) . '</option>'; ?></select>
         <?php if ($isOrder): ?><input name="so" placeholder="SO number" value="<?= h($r['so_number']) ?>"><?php endif; ?>
         <input name="note" placeholder="Note for the customer" value="<?= h($r['note']) ?>"><button class="small primary">Save</button></form></details></td></tr>

@@ -6,6 +6,7 @@ Staff manage logins and requests at **https://portal.wautama.com/staff/**.
 
 - Reads `si_wa` live, **read only**. Logins and requests are saved in `wau_erp` (tables `portal_*`).
 - Each request gets a reference (REQ-0001). Staff see it on the Requests tab, create the SO in wau-erp and mark it done.
+- Statuses of an order request: *Sent* (no status yet) → *Received by our team* → *Being processed* (also set by the **Confirm** button on wau-erp's Home, Portal orders) → *SO created* or *Cannot fulfil*.
 - Reached from the internet only through the Cloudflare Tunnel; Apache serves it on 127.0.0.1:8081.
 
 ## Folders
