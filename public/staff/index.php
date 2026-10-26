@@ -17,7 +17,10 @@ function back($tab = '') { header('Location: ./' . ($tab ? '?tab=' . $tab : ''))
 
 // ---------------------------------------------------------------- POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  if (!csrf_ok(isset($_POST['csrf']) ? $_POST['csrf'] : '')) { flash('The form expired. Please try again.', 'err'); back(); }
+  if (!csrf_ok(isset($_POST['csrf']) ? $_POST['csrf'] : '')) {
+    if (empty($_COOKIE[session_name()])) { header('Location: ./?nocookie=1'); exit; } // the browser did not keep the sign-in cookie
+    flash('The form expired. Please try again.', 'err'); back();
+  }
   $do = isset($_POST['do']) ? $_POST['do'] : '';
 
   if ($do === 'login') {
@@ -75,6 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ---------------------------------------------------------------- page
 $tab = isset($_GET['tab']) && $_GET['tab'] === 'requests' ? 'requests' : 'accounts';
 $flash = isset($_SESSION['flash']) ? $_SESSION['flash'] : null; unset($_SESSION['flash']);
+if (!$flash && isset($_GET['nocookie'])) $flash = array('Your browser did not keep the sign-in cookie. Open the staff page at https://portal.wautama.com/staff/ and allow cookies for this site.', 'err');
 $reveal = isset($_SESSION['reveal']) ? $_SESSION['reveal'] : null; unset($_SESSION['reveal']);
 $csrf = h($_SESSION['csrf']);
 ?><!doctype html>

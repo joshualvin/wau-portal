@@ -57,7 +57,10 @@ function client_ip() {
 function start_session() {
   if (session_status() === PHP_SESSION_ACTIVE) return;
   session_name('WAUPORTAL');
-  session_set_cookie_params(array('lifetime' => 0, 'path' => '/', 'secure' => (bool)cfgv('secure_cookies', true), 'httponly' => true, 'samesite' => 'Lax'));
+  // Secure cookie when the visit is HTTPS (through the Cloudflare tunnel). Opening http://127.0.0.1:8081 on the server
+  // itself still works, otherwise the browser would drop the cookie and every sign-in would fail without a message.
+  $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https');
+  session_set_cookie_params(array('lifetime' => 0, 'path' => '/', 'secure' => $https && (bool)cfgv('secure_cookies', true), 'httponly' => true, 'samesite' => 'Lax'));
   $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'wau_portal_sessions';
   if (!is_dir($dir)) @mkdir($dir, 0700, true);
   if (is_dir($dir)) session_save_path($dir);
