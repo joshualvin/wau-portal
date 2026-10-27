@@ -112,6 +112,7 @@ svg.i{width:20px;height:20px;flex-shrink:0;fill:none;stroke:currentColor;stroke-
 .pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap}
 .pagehead>div{min-width:0}
 .pagehead p{margin-top:6px}
+.head-acts{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:.86rem;margin-bottom:10px}
 .back:hover{color:var(--ink)}
 a.back{text-decoration:none;justify-self:start;padding-block:12px;margin-block:-12px -16px} /* 44px tap area, same spacing */
@@ -719,8 +720,9 @@ async function detailView(no){
  const fromReq=o.request&&o.status==='Order Received';
  const idx=o.status==='Partly delivered'?2:fromReq?1:STEPS.indexOf(o.status);
  const when=[o.history.received,fromReq?o.request.handled_at:o.history.processed,o.history.shipped,o.history.delivered];
+ S.again={from:o.no,items:o.lines};
  return `<div><button class="back" data-go="orders">${ic('left')}My orders</button>
-  <div class="pagehead"><div><h1>${esc(o.no)}</h1><p class="muted">Ordered ${dt(o.date)} · ${rolls(o.rolls)} · ${num(o.meters)} m${o.request?` · From your request <b class="mono">${esc(o.request.ref)}</b>`:''}</p></div>${pill(fromReq?'Order Processed':o.status)}</div></div>
+  <div class="pagehead"><div><h1>${esc(o.no)}</h1><p class="muted">Ordered ${dt(o.date)} · ${rolls(o.rolls)} · ${num(o.meters)} m${o.request?` · From your request <b class="mono">${esc(o.request.ref)}</b>`:''}</p></div><div class="head-acts">${pill(fromReq?'Order Processed':o.status)}<button class="btn btn-line btn-sm" data-act="again">${ic('cart')}Order again</button></div></div></div>
  <section class="panel"><div class="panel-b"><ol class="timeline t4">${STEPS.map((t,i)=>part&&i===3?`<li class="part now" style="--i:3"><span class="d"></span><b>Partly delivered</b><span>${got} of ${rolls(o.rolls)}${when[3]?' · '+dt(when[3]):''}</span></li>`:`<li class="${i<=idx?'done':''} ${i===idx&&!part?'now':''}" style="--i:${i}"><span class="d"></span><b>${t}</b><span>${i<=idx&&when[i]?dt(when[i]):(i<=idx?'Done':'Pending')}</span></li>`).join('')}</ol>
   ${o.status==='Partly delivered'?`<p class="note" style="margin-top:14px">${rolls(o.rolls_to_come)} still to come on a next delivery.</p>`:''}</div></section>
  <section class="panel"><div class="panel-h"><h2>Products</h2></div><div class="tbl" style="margin-top:8px"><table>
@@ -749,9 +751,10 @@ async function requestView(id){
  // Unknown (older than 90 days) → My orders; a request whose SO is made → that SO. render() draws the new view.
  const r=S.reqs.find(x=>x.id==id);if(!r){S.view='orders';render();return ''}
  if(r.status==='SO created'&&r.so_number){S.view='detail';S.detail=r.so_number;render();return ''}
+ S.again={from:r.ref,items:r.data.items};
  const msg=r.status==='SO created'?`Your sales order <b class="mono">${esc(r.so_number)}</b> was created.`:r.status==='Cannot fulfil'?'Our team could not fulfil this request.':r.status==='Received by our team'&&r.status_by?`Your request was acknowledged by ${esc(r.status_by)}, who is making your sales order. Tracking starts once the SO is made.`:r.status==='Being processed'?'Our sales team has confirmed your request and is making your sales order. Tracking starts once the SO is made.':'Our sales team checks your request and creates your sales order. Tracking starts once the SO is made.';
  return `<div><button class="back" data-go="orders">${ic('left')}My orders</button>
-  <div class="pagehead"><div><h1>${esc(r.ref)}</h1><p class="muted">Sent ${dt(r.created_at)}${r.data.po?' · Your PO '+esc(r.data.po):''}</p></div>${pill(r.status)}</div></div>
+  <div class="pagehead"><div><h1>${esc(r.ref)}</h1><p class="muted">Sent ${dt(r.created_at)}${r.data.po?' · Your PO '+esc(r.data.po):''}</p></div><div class="head-acts">${pill(r.status)}<button class="btn btn-line btn-sm" data-act="again">${ic('cart')}Order again</button></div></div></div>
  ${reqRail(r)}
  <div class="alert" style="background:var(--${r.status==='Cannot fulfil'?'bad':r.status==='SO created'?'good':'warn'}-soft)"><span>${msg}${r.staff_note?' '+esc(r.staff_note):''}</span>${r.status==='SO created'&&r.so_number?`<button class="btn btn-line" data-open-order="${esc(r.so_number)}">Track ${esc(r.so_number)}</button>`:''}</div>
  <section class="panel"><div class="tbl"><table><thead><tr><th>Product</th><th class="r">Rolls</th><th class="r">Meters</th></tr></thead>
@@ -778,6 +781,18 @@ function redraw(sel,html,fallback){
   :card?`[data-card="${CSS.escape(card.dataset.card)}"] ${a.name==='rolls'?'input':'button[type=submit]'}`:a.dataset.act?`[data-act="${a.dataset.act}"]`:null;
  box.innerHTML=html();
  if(key||fallback){const x=box.querySelector(key||fallback)||(fallback&&box.querySelector(fallback));if(x&&(key||a===document.body))x.focus({preventScroll:true})}
+}
+// Order again: the products of the order on screen go into the cart with the same rolls (added to what is there).
+// Products the customer can no longer order (inactive, or a custom article for someone else) are named, not added.
+async function orderAgain(){
+ const a=S.again;if(!a)return;
+ if(!S.products){try{S.products=(await api('products')).products}catch(e){toast(e.message);return}}
+ const ok=[],gone=[];
+ for(const it of a.items){const k=it.art+'|'+it.color;if(prodOf(k)){S.cart[k]=Math.min(999,(S.cart[k]||0)+(+it.rolls||0));ok.push(it)}else gone.push(it)}
+ const note=gone.length?` Not available any more: ${gone.map(i=>i.name+' '+i.color_name).join(', ')}.`:'';
+ if(!ok.length){toast(`None of the products of ${a.from} can be ordered now.`+note);return}
+ saveCart();S.view='order';window.scrollTo(0,0);await render();openCart();
+ toast(`Added ${ok.length} product${ok.length===1?'':'s'} of ${a.from} to your cart.`+note);
 }
 function openCart(){$('#cart-body').innerHTML=cartHtml();const d=$('#cart');if(!d.open)d.showModal()}
 async function boot(){
@@ -845,6 +860,7 @@ document.addEventListener('click',async e=>{
  if(d.act==='reload'){S.products=null;render();return}
  if(d.act==='stockonly'){S.stockOnly=!S.stockOnly;b.setAttribute('aria-pressed',S.stockOnly);redraw('#plist',shopCards);return}
  if(d.act==='cart'){openCart();return}
+ if(d.act==='again'){orderAgain();return}
  if(d.act==='closecart'){$('#cart').close();return}
  if(d.act==='checkout'){$('#cart').close();S.view='checkout';window.scrollTo(0,0);render();return}
  if(d.pick){const [art,color]=d.pick.split('|');S.sel[art]=color;redraw('#plist',shopCards);return}
