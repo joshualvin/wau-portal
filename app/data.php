@@ -35,6 +35,13 @@ function customer_info($code) {
   return $r ? array('code' => tr($r[0][0]), 'name' => tr($r[0][1]), 'top' => (int)$r[0][2]) : null;
 }
 
+// The customer's address in the main system: masterpelanggan alamat1, alamat2, KOTA (config.php 'cols' may name others).
+function customer_address($code) {
+  $c = cfgv('cols'); $col = function ($k, $d) use ($c) { return '`' . str_replace('`', '', isset($c[$k]) ? $c[$k] : $d) . '`'; };
+  $r = q_rows('SELECT ' . $col('cust_addr1', 'alamat1') . ', ' . $col('cust_addr2', 'alamat2') . ', ' . $col('cust_city', 'KOTA') . ' FROM ' . T('customers') . ' WHERE ' . C('cust_code') . ' = ?', array($code));
+  return $r ? implode(', ', array_filter(array_map('tr', $r[0]), 'strlen')) : '';
+}
+
 // Article and color names and roll length for a list of article codes: 'art|color' => array(name, color_name, roll_m)
 // Articles marked inactive in masterbarang (cols 'art_active', e.g. IsAktif) are left out, so customers cannot see or order them.
 function is_inactive($v) {

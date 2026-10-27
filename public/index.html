@@ -112,6 +112,12 @@ svg.i{width:20px;height:20px;flex-shrink:0;fill:none;stroke:currentColor;stroke-
 .pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap}
 .pagehead>div{min-width:0}
 .pagehead p{margin-top:6px}
+.addr{border:0;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+.addr legend{padding:0;margin-bottom:6px;font-size:.82rem;font-weight:500;color:var(--muted)}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-sm);cursor:pointer}
+.opt:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.opt input{margin-top:3px;accent-color:var(--accent)}
+.opt span{min-width:0}.opt b{display:block;font-size:.86rem;font-weight:600}.opt small{display:block;color:var(--muted);font-size:.84rem;overflow-wrap:anywhere}
 .head-acts{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:.86rem;margin-bottom:10px}
 .back:hover{color:var(--ink)}
@@ -602,6 +608,16 @@ function cartHtml(){
   <button class="btn btn-primary" data-act="checkout">Checkout</button><button class="btn btn-ghost" data-act="closecart">Keep shopping</button></div>`
  :`<div class="dr-b empty"><p>Your cart is empty.</p><p class="note" style="margin-top:6px">Pick a color on a product, type the rolls and press Add to cart.</p></div>`}`;
 }
+// Deliver to: the address on file and addresses used before, newest used one preselected; or type another one.
+function addrPicker(){
+ const A=S.addresses||[],pick=A.findIndex(a=>a.kind==='used'),sel=pick<0?0:pick;
+ if(!A.length)return `<label class="f" for="o-addr">Deliver to<input class="inp" id="o-addr" maxlength="300" placeholder="Street, city, contact on site"></label>`;
+ return `<fieldset class="addr"><legend>Deliver to</legend>
+  ${A.map((a,i)=>`<label class="opt"><input type="radio" name="addr" value="${i}" ${i===sel?'checked':''}><span><b>${a.kind==='file'?'Address on file':'Used before'}</b><small>${esc(a.text)}</small></span></label>`).join('')}
+  <label class="opt"><input type="radio" name="addr" value="new"><span><b>Another address</b></span></label>
+  <input class="inp" id="o-addr" maxlength="300" placeholder="Street, city, contact on site" aria-label="Another delivery address" hidden></fieldset>`;
+}
+function deliverTo(){const r=document.querySelector('input[name=addr]:checked');return !r||r.value==='new'?$('#o-addr').value:S.addresses[+r.value].text}
 function checkoutView(){
  if(!S.products)return `<div class="panel empty" style="padding:48px 20px">Loading your cart…</div>`;
  const L=cartLines(),oos=L.filter(x=>x.p.stock==='out').length;
@@ -613,7 +629,7 @@ function checkoutView(){
   <form class="panel panel-b form" id="orderform" novalidate>
    <h2>Delivery</h2>
    <label class="f" for="o-po">Your PO number<input class="inp" id="o-po" maxlength="60" placeholder="Optional"></label>
-   <label class="f" for="o-addr">Deliver to<input class="inp" id="o-addr" maxlength="300" placeholder="Your usual address"></label>
+   ${addrPicker()}
    <label class="f" for="o-date">Requested delivery date<input class="inp" id="o-date" type="date" min="${tomorrow}"></label>
    <label class="f" for="o-notes">Notes for our team<textarea class="inp" id="o-notes" maxlength="1000" placeholder="Unloading hours, contact on site, special color or spec"></textarea></label>
    <p class="note">Your agreed prices are applied when our sales team creates the SO.</p>
@@ -658,6 +674,7 @@ async function draw(){
   catch(e){$('#content').innerHTML=`<div class="panel empty" style="padding:40px 20px"><p>${esc(e.message)}</p><p style="margin-top:12px"><button class="btn btn-line" data-go="${v==='orders'?'orders':'orders'}">Try again</button></p></div>`}
   return;
  }
+ if(S.view==='checkout'&&!S.addresses){try{S.addresses=(await api('addresses')).addresses}catch(_){S.addresses=[]}}
  const page=()=>S.view==='sent'?sentView():S.view==='checkout'?checkoutView():orderView();
  root.innerHTML=shell(page());
  if((S.view==='order'||S.view==='checkout')&&!S.products){
@@ -772,7 +789,9 @@ function syncCart(){ // header count, phone cart bar, product cards, open cart a
  if($('#plist'))redraw('#plist',shopCards);
  if($('#cart').open)redraw('#cart-body',cartHtml,'[data-act=closecart]');
  if(S.view==='checkout'&&$('#content')){const keep={};document.querySelectorAll('#orderform .inp').forEach(x=>keep[x.id]=x.value);
-  $('#content').innerHTML=checkoutView();Object.keys(keep).forEach(id=>{const x=document.getElementById(id);if(x)x.value=keep[id]})}
+  const ch=document.querySelector('input[name=addr]:checked'),addr=ch&&ch.value;
+  $('#content').innerHTML=checkoutView();Object.keys(keep).forEach(id=>{const x=document.getElementById(id);if(x)x.value=keep[id]});
+  if(addr){const r=document.querySelector(`input[name=addr][value="${addr}"]`);if(r){r.checked=true;$('#o-addr').hidden=addr!=='new'}}}
 }
 // Redraw a region and put focus back on the same control (a swatch, a rolls box, a button), or on a fallback.
 function redraw(sel,html,fallback){
@@ -818,8 +837,8 @@ document.addEventListener('submit',async e=>{
   if(f.id==='orderform'){
    err('#o-err','');
    const items=Object.keys(S.cart).map(k=>{const [art,color]=k.split('|');return {art,color,rolls:S.cart[k]}});
-   const r=await api('order_request',{items,po:$('#o-po').value,deliver_to:$('#o-addr').value,date:$('#o-date').value,notes:$('#o-notes').value});
-   S.sent={id:r.id,ref:r.ref,rolls:cartRolls()};S.reqs=null;S.cart={};saveCart();S.view='sent';render();window.scrollTo(0,0);return}
+   const r=await api('order_request',{items,po:$('#o-po').value,deliver_to:deliverTo(),date:$('#o-date').value,notes:$('#o-notes').value});
+   S.sent={id:r.id,ref:r.ref,rolls:cartRolls()};S.reqs=null;S.addresses=null;S.cart={};saveCart();S.view='sent';render();window.scrollTo(0,0);return}
  }catch(ex){
   // the error stays next to the button that failed (kept until the next try), the order and typed details stay as they were
   const id={login:'#l-err',pwform:'#p-err',orderform:'#o-err'}[f.id];
@@ -846,12 +865,13 @@ document.addEventListener('input',e=>{
  setQty(k,e.target.value); // while typing in the cart only the totals change; the lines redraw when the box is left
  const g=document.querySelectorAll('#cart .grand span');if(g.length){g[0].textContent=rolls(cartRolls());g[1].textContent=num(cartLines().reduce((a,x)=>a+x.m,0))+' m'}
 });
-document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.qty)syncCart()});
+document.addEventListener('change',e=>{if(e.target.name==='addr'){const a=$('#o-addr');a.hidden=e.target.value!=='new';if(!a.hidden)a.focus()}
+if(e.target.dataset&&e.target.dataset.qty)syncCart()});
 document.addEventListener('toggle',e=>{const k=e.target.dataset&&e.target.dataset.fold;if(k){S.folds=S.folds||{};S.folds[k]=e.target.open}},true);
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.qty){e.preventDefault();e.target.blur()}});
 document.addEventListener('click',async e=>{
  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
- if(d.act==='logout'){try{await api('logout',{})}catch(_){}clearCart();S.me=null;S.products=null;S.view='order';render();return}
+ if(d.act==='logout'){try{await api('logout',{})}catch(_){}clearCart();S.addresses=null;S.me=null;S.products=null;S.view='order';render();return}
  if(d.act==='password'){S.view='password';render();return}
  if(d.act==='back'||d.act==='new'){S.view='order';render();return}
  if(d.go){S.view=d.go;window.scrollTo(0,0);render();return}

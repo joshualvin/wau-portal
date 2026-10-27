@@ -93,6 +93,23 @@ function requests_by_so($customer, $orders) {
   return $out;
 }
 // The customer's order requests of the last 90 days, with what our staff set on the staff page.
+// Where this order can go: the address on file in the main system, then addresses used in the customer's requests
+// (last 12 months, newest first, at most 5). Same address written twice counts once.
+function delivery_addresses($customer) {
+  $list = array(); $seen = array();
+  $add = function ($kind, $text) use (&$list, &$seen) {
+    $t = trim(preg_replace('/\s+/', ' ', (string)$text)); $k = strtolower($t);
+    if ($t === '' || isset($seen[$k])) return; $seen[$k] = true; $list[] = array('kind' => $kind, 'text' => $t);
+  };
+  $add('file', customer_address($customer));
+  $st = db()->prepare('SELECT payload FROM ' . E('portal_requests') . ' WHERE customer = ? AND kind = ? AND created_at >= ? ORDER BY id DESC LIMIT 60');
+  $st->execute(array($customer, 'order', date('Y-m-d H:i:s', strtotime('-12 months'))));
+  foreach ($st->fetchAll() as $r) {
+    $p = json_decode($r['payload'], true);
+    if (is_array($p) && isset($p['deliver_to']) && count($list) < 6) $add('used', $p['deliver_to']);
+  }
+  return $list;
+}
 function my_requests($customer, $by_so = array()) {
   $so_of = array(); foreach ($by_so as $so => $x) $so_of[$x['id']] = $so;
   $st = db()->prepare('SELECT r.id, r.created_at, r.payload, s.status, s.so_number, s.note, s.updated_at, s.updated_by FROM ' . E('portal_requests') . ' r
@@ -193,6 +210,10 @@ case 'order_request':
     ->execute(array('order', $u['customer'], $u['email'], now(), json_encode($payload)));
   $id = (int)db()->lastInsertId();
   out(array('ok' => true, 'id' => $id, 'ref' => 'REQ-' . str_pad($id, 4, '0', STR_PAD_LEFT)));
+
+case 'addresses':
+  $u = need_user();
+  out(array('ok' => true, 'addresses' => delivery_addresses($u['customer'])));
 
 default:
   bad('Unknown request', 404);
