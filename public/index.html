@@ -436,8 +436,8 @@ const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','De
 const dt=v=>{if(!v)return '';const [y,m,d]=String(v).slice(0,10).split('-');return `${+d} ${MON[+m-1]} ${y}`};
 const STEPS=['Order Received','Order Processed','Shipped','Delivered'];
 const PILL={'Order Received':'p-neutral','Order Processed':'p-info','Shipped':'p-accent','Delivered':'p-good','Partly delivered':'p-warn',
- 'Being prepared':'p-info','Sent':'p-warn','Received by our team':'p-info','Being processed':'p-info','SO created':'p-good','Cannot fulfil':'p-bad'};
-const pill=t=>`<span class="pill ${PILL[t]||'p-neutral'}">${esc(t)}</span>`;
+ 'Being prepared':'p-info','Sent':'p-warn','Received by our team':'p-info','Acknowledged':'p-info','Being processed':'p-info','SO created':'p-good','Cannot fulfil':'p-bad'};
+const pill=t=>{if(t==='Received by our team')t='Acknowledged';return `<span class="pill ${PILL[t]||'p-neutral'}">${esc(t)}</span>`};
 const stockPill=p=>p.stock==='in'?`<span class="pill p-good">In stock</span>`:`<span class="pill p-neutral">Out of stock</span>`;
 
 const S={me:null,csrf:'',view:'order',products:null,cart:{},q:'',stockOnly:false,sent:null,sel:{}};
@@ -707,19 +707,22 @@ async function detailView(no){
   <p class="note" style="margin-top:14px">Questions? Email ${esc(S.contact.email)} or call ${esc(S.contact.phone)} and mention ${esc(o.no)}.</p>
  </div></section>`;
 }
-// A request on the same rail as an order: Order Received when it is sent, Order Processed once our team confirms it
-// (Being processed, set by Confirm in wau-erp) or makes the SO; Shipped and Delivered follow on the SO's own page.
+// A request on the same rail as an order: Order Received when it is sent ("Acknowledged by <name>" once a salesperson
+// confirms it in WAU ERP: status Received by our team), Order Processed once the SO is made and linked; Shipped and
+// Delivered follow on the SO's own page.
 function reqRail(r){
  if(r.status==='Cannot fulfil')return '';
- const idx=r.status==='Being processed'||r.status==='SO created'?1:0, when=[r.created_at,idx?r.status_at:null,null,null];
- return `<section class="panel"><div class="panel-b"><ol class="timeline t4">${STEPS.map((t,i)=>`<li class="${i<=idx?'done':''} ${i===idx?'now':''}" style="--i:${i}"><span class="d"></span><b>${t}</b><span>${when[i]?dt(when[i]):(i<=idx?'Done':'Pending')}</span></li>`).join('')}</ol></div></section>`;
+ const idx=r.status==='SO created'?1:0, ack=r.status!=='Sent';
+ const sub=[ack&&r.status_by?`Acknowledged by ${esc(r.status_by)}`:'',dt(ack&&r.status==='Received by our team'?r.status_at:r.created_at)].filter(Boolean).join(' · ');
+ const when=[sub,idx?dt(r.status_at):'',''];
+ return `<section class="panel"><div class="panel-b"><ol class="timeline t4">${STEPS.map((t,i)=>`<li class="${i<=idx?'done':''} ${i===idx?'now':''}" style="--i:${i}"><span class="d"></span><b>${t}</b><span>${when[i]||(i<=idx?'Done':'Pending')}</span></li>`).join('')}</ol></div></section>`;
 }
 async function requestView(id){
  if(!S.reqs)S.reqs=(await api('orders')).requests;
  // Unknown (older than 90 days) → My orders; a request whose SO is made → that SO. render() draws the new view.
  const r=S.reqs.find(x=>x.id==id);if(!r){S.view='orders';render();return ''}
  if(r.status==='SO created'&&r.so_number){S.view='detail';S.detail=r.so_number;render();return ''}
- const msg=r.status==='SO created'?`Your sales order <b class="mono">${esc(r.so_number)}</b> was created.`:r.status==='Cannot fulfil'?'Our team could not fulfil this request.':r.status==='Being processed'?'Our sales team has confirmed your request and is making your sales order. Tracking starts once the SO is made.':'Our sales team checks your request and creates your sales order. Tracking starts once the SO is made.';
+ const msg=r.status==='SO created'?`Your sales order <b class="mono">${esc(r.so_number)}</b> was created.`:r.status==='Cannot fulfil'?'Our team could not fulfil this request.':r.status==='Received by our team'&&r.status_by?`Your request was acknowledged by ${esc(r.status_by)}, who is making your sales order. Tracking starts once the SO is made.`:r.status==='Being processed'?'Our sales team has confirmed your request and is making your sales order. Tracking starts once the SO is made.':'Our sales team checks your request and creates your sales order. Tracking starts once the SO is made.';
  return `<div><button class="back" data-go="orders">${ic('left')}My orders</button>
   <div class="pagehead"><div><h1>${esc(r.ref)}</h1><p class="muted">Sent ${dt(r.created_at)}${r.data.po?' · Your PO '+esc(r.data.po):''}</p></div>${pill(r.status)}</div></div>
  ${reqRail(r)}

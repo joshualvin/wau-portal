@@ -95,7 +95,7 @@ function requests_by_so($customer, $orders) {
 // The customer's order requests of the last 90 days, with what our staff set on the staff page.
 function my_requests($customer, $by_so = array()) {
   $so_of = array(); foreach ($by_so as $so => $x) $so_of[$x['id']] = $so;
-  $st = db()->prepare('SELECT r.id, r.created_at, r.payload, s.status, s.so_number, s.note, s.updated_at FROM ' . E('portal_requests') . ' r
+  $st = db()->prepare('SELECT r.id, r.created_at, r.payload, s.status, s.so_number, s.note, s.updated_at, s.updated_by FROM ' . E('portal_requests') . ' r
     LEFT JOIN ' . E('portal_request_status') . ' s ON s.request_id = r.id WHERE r.customer = ? AND r.kind = ? AND r.created_at >= ? ORDER BY r.id DESC');
   $st->execute(array($customer, 'order', date('Y-m-d H:i:s', strtotime('-90 days'))));
   $rows = $st->fetchAll(); $arts = array();
@@ -106,7 +106,7 @@ function my_requests($customer, $by_so = array()) {
     $p = $r['payload'];
     foreach ($p['items'] as $i => $it) { $l = label_for($names, $it['art'], $it['color']); $p['items'][$i] += array('name' => $l['name'], 'color_name' => $l['color_name'], 'meters' => round($it['rolls'] * $l['roll_m'], 2)); }
     $out[] = array('id' => (int)$r['id'], 'ref' => 'REQ-' . str_pad($r['id'], 4, '0', STR_PAD_LEFT), 'created_at' => $r['created_at'],
-      'status' => isset($so_of[(int)$r['id']]) ? 'SO created' : ($r['status'] ? $r['status'] : 'Sent'), 'so_number' => isset($so_of[(int)$r['id']]) ? $so_of[(int)$r['id']] : (string)$r['so_number'], 'staff_note' => (string)$r['note'], 'status_at' => (string)$r['updated_at'], 'data' => $p);
+      'status' => isset($so_of[(int)$r['id']]) ? 'SO created' : ($r['status'] ? $r['status'] : 'Sent'), 'so_number' => isset($so_of[(int)$r['id']]) ? $so_of[(int)$r['id']] : (string)$r['so_number'], 'staff_note' => (string)$r['note'], 'status_at' => (string)$r['updated_at'], 'status_by' => (string)$r['updated_by'], 'data' => $p);
   }
   return $out;
 }

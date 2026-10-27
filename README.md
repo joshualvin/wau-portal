@@ -7,7 +7,7 @@ Staff manage requests, custom articles and customer logins in **WAU ERP, Sales �
 - Reads `si_wa` live, **read only**. Logins and requests are saved in `wau_erp` (tables `portal_*`).
 - Each request gets a reference (REQ-0001). Staff see it in WAU ERP (Home › Portal orders, Sales › Customer portal), create the SO in the main system and link it.
 - **Request becomes its SO**: the salesperson types the request number in the SO's note in the main system (exactly *REQ-0007*, with the dash). The portal then lists that SO in its place ("from REQ-0007"; opening the request opens the SO), shows it as Order Processed until its first surat jalan, and wau-erp's Home drops the request. Typing the SO number on the staff page links them too.
-- Statuses of an order request: *Sent* (no status yet) → *Received by our team* → *Being processed* (also set by the **Confirm** button on wau-erp's Home, Portal orders) → *SO created* or *Cannot fulfil*. The request page shows them on the order progress bar: sent = Order Received, Being processed or SO created = Order Processed (with its date).
+- Statuses of an order request: *Sent* (no status yet) → *Received by our team*, shown to the customer as **Acknowledged by <salesperson>** (set by the **Confirm** button in WAU ERP) → *SO created* (SO linked) or *Cannot fulfil*. The request page shows them on the order progress bar: Order Received (with who acknowledged it), Order Processed once the SO is linked. *Being processed* still exists for the staff screen but no longer lights Order Processed.
 - Reached from the internet only through the Cloudflare Tunnel; Apache serves it on 127.0.0.1:8081.
 
 ## Folders
