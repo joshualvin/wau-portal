@@ -92,6 +92,16 @@ function requests_by_so($customer, $orders) {
   foreach ($mine as $id => $q) { $so = trim((string)$q['so_number']); if ($so !== '' && !isset($out[$so])) $link($so, $id, $q['updated_at']); }
   return $out;
 }
+// One of this customer's order requests that may still be changed or cancelled: not once the SO is made, sales could not
+// fulfil it, or it was cancelled.
+function my_open_request($customer, $id) {
+  $st = db()->prepare('SELECT r.id, r.created_at, r.payload, s.status FROM ' . E('portal_requests') . ' r LEFT JOIN ' . E('portal_request_status') . ' s ON s.request_id = r.id
+    WHERE r.id = ? AND r.customer = ? AND r.kind = ?');
+  $st->execute(array($id, $customer, 'order')); $r = $st->fetch();
+  if (!$r) bad('Request not found.', 404);
+  if (in_array($r['status'], array('SO created', 'Cannot fulfil', 'Cancelled'), true)) bad('This request can no longer be changed. Please contact our sales team.', 409);
+  return $r;
+}
 // The customer's order requests of the last 90 days, with what our staff set on the staff page.
 // Where this order can go: the address on file in the main system, then addresses used in the customer's requests
 // (last 12 months, newest first, at most 5). Same address written twice counts once.
@@ -206,10 +216,32 @@ case 'order_request':
   $date = isset($in['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $in['date']) ? $in['date'] : '';
   $payload = array('items' => $items, 'po' => substr(trim((string)$in['po']), 0, 60), 'deliver_to' => substr(trim((string)$in['deliver_to']), 0, 300),
     'date' => $date, 'notes' => substr(trim((string)$in['notes']), 0, 1000));
+  // Revise: the customer changes a request of theirs that is still open. Same number; the earlier version is kept
+  // ('previous') for our sales team, and the request is new again for them (its status is cleared), marked revised.
+  if (!empty($in['revise'])) {
+    $old = my_open_request($u['customer'], (int)$in['revise']);
+    $op = json_decode($old['payload'], true); if (!is_array($op)) $op = array();
+    $payload['revised'] = (isset($op['revised']) ? (int)$op['revised'] : 0) + 1;
+    $payload['revised_at'] = now();
+    $payload['previous'] = array('items' => isset($op['items']) ? $op['items'] : array(), 'po' => isset($op['po']) ? $op['po'] : '',
+      'deliver_to' => isset($op['deliver_to']) ? $op['deliver_to'] : '', 'date' => isset($op['date']) ? $op['date'] : '', 'notes' => isset($op['notes']) ? $op['notes'] : '',
+      'at' => isset($op['revised_at']) ? $op['revised_at'] : $old['created_at']);
+    db()->prepare('UPDATE ' . E('portal_requests') . ' SET payload = ? WHERE id = ?')->execute(array(json_encode($payload), (int)$old['id']));
+    db()->prepare('DELETE FROM ' . E('portal_request_status') . ' WHERE request_id = ?')->execute(array((int)$old['id']));
+    out(array('ok' => true, 'id' => (int)$old['id'], 'ref' => 'REQ-' . str_pad($old['id'], 4, '0', STR_PAD_LEFT), 'revised' => true));
+  }
   db()->prepare('INSERT INTO ' . E('portal_requests') . ' (kind, customer, login, created_at, payload) VALUES (?, ?, ?, ?, ?)')
     ->execute(array('order', $u['customer'], $u['email'], now(), json_encode($payload)));
   $id = (int)db()->lastInsertId();
   out(array('ok' => true, 'id' => $id, 'ref' => 'REQ-' . str_pad($id, 4, '0', STR_PAD_LEFT)));
+
+case 'request_cancel':
+  if (!$post) bad('POST only', 405);
+  $u = need_user();
+  $r = my_open_request($u['customer'], isset($in['id']) ? (int)$in['id'] : 0);
+  db()->prepare('REPLACE INTO ' . E('portal_request_status') . ' (request_id, status, so_number, note, updated_at, updated_by) VALUES (?, ?, ?, ?, ?, ?)')
+    ->execute(array((int)$r['id'], 'Cancelled', '', '', now(), substr('Customer ' . $u['email'], 0, 100)));
+  out(array('ok' => true));
 
 case 'addresses':
   $u = need_user();

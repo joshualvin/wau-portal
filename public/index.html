@@ -460,6 +460,12 @@ const rolls=n=>n+(n===1?' roll':' rolls');
    To change a word, edit ID or ID_RX. Wording to be checked by WAU staff. */
 let LANG=(()=>{try{return localStorage.getItem('wau.lang')||'id'}catch(_){return 'id'}})();
 const ID={
+ 'Revise request':'Ubah permintaan','Cancel request':'Batalkan permintaan','Cancelled':'Dibatalkan','You cancelled this request.':'Anda membatalkan permintaan ini.',
+ 'Revising':'Mengubah','. Sending replaces that request; our sales team sees it as revised.':'. Mengirim akan mengganti permintaan tersebut; tim penjualan kami melihatnya sebagai revisi.',
+ 'Stop revising':'Batal mengubah','Send revised request':'Kirim permintaan yang diubah','Quote request revised':'Permintaan penawaran diubah','Request cancelled.':'Permintaan dibatalkan.',
+ 'Your quote list will be replaced by the products of this request. Continue?':'Daftar penawaran Anda akan diganti dengan produk dari permintaan ini. Lanjutkan?',
+ 'Cancel this request? Our sales team will not work on it any more.':'Batalkan permintaan ini? Tim penjualan kami tidak akan memprosesnya lagi.',
+ 'This request can no longer be changed. Please contact our sales team.':'Permintaan ini tidak bisa diubah lagi. Silakan hubungi tim penjualan kami.','Request not found.':'Permintaan tidak ditemukan.',
  'WAU Order Portal':'Portal Pesanan WAU','CUSTOMER PORTAL':'PORTAL PELANGGAN','WELCOME':'SELAMAT DATANG','CHANGE PASSWORD':'GANTI KATA SANDI',
  'Back to wautama.com':'Kembali ke wautama.com','Sign in':'Masuk','Sign out':'Keluar','Signing in…':'Sedang masuk…',
  'Request quotes for SIMNU synthetic leather and follow your orders.':'Kirim permintaan pesanan kulit sintetis SIMNU.',
@@ -523,6 +529,7 @@ const ID={
 };
 // Sentences with numbers or names in them; applied in this order, then the plain roll counts.
 const ID_RX=[
+ [/^Revised (\d+)× · last on /,'Diubah $1× · terakhir '],[/^Not available any more: (.+)\.$/,'Sudah tidak tersedia: $1.'],
  [/^(\d+) colors? (?:is|are) out of stock\. You can still request (?:it|them); our sales team confirms whether we can supply (?:it|them) and when\.$/,'$1 warna stoknya habis. Anda tetap bisa memintanya; tim penjualan kami akan mengonfirmasi apakah dan kapan warna tersebut bisa kami sediakan.'],
  [/^Your quote request was not sent\. (.*)$/,(m,rest)=>'Permintaan penawaran Anda belum terkirim. '+tr(rest)],
  [/^Added to quote list: (.+) of (.+)\.$/,'Masuk daftar penawaran: $1 $2.'],[/^Quote list updated: (.+) of (.+)\.$/,'Daftar penawaran diperbarui: $1 $2.'],
@@ -564,7 +571,7 @@ const MON={en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov'
 const dt=v=>{if(!v)return '';const [y,m,d]=String(v).slice(0,10).split('-');return `${+d} ${MON[LANG==='id'?'id':'en'][+m-1]} ${y}`};
 const STEPS=['Order Received','Order Processed','Shipped','Delivered'];
 const PILL={'Order Received':'p-neutral','Order Processed':'p-info','Shipped':'p-accent','Delivered':'p-good','Partly delivered':'p-warn',
- 'Being prepared':'p-info','Sent':'p-warn','Received by our team':'p-info','Acknowledged':'p-info','Being processed':'p-info','SO created':'p-good','Cannot fulfil':'p-bad'};
+ 'Being prepared':'p-info','Sent':'p-warn','Received by our team':'p-info','Acknowledged':'p-info','Being processed':'p-info','SO created':'p-good','Cannot fulfil':'p-bad','Cancelled':'p-bad'};
 const telHref=v=>{const d=String(v||'').replace(/[^0-9+]/g,'');return 'tel:'+(d.startsWith('0')?'+62'+d.slice(1):d)}; // (031) 843 7377 -> tel:+62318437377
 const contactLinks=c=>`<a class="link" href="mailto:${esc(c.email)}">${esc(c.email)}</a> or call <a class="link" href="${esc(telHref(c.phone))}">${esc(c.phone)}</a>`;
 const pill=t=>{if(t==='Received by our team')t='Acknowledged';return `<span class="pill ${PILL[t]||'p-neutral'}">${esc(t)}</span>`};
@@ -573,7 +580,7 @@ const stockPill=p=>p.stock==='in'?`<span class="pill p-good">In stock</span>`:`<
 const S={me:null,csrf:'',view:'order',products:null,cart:{},q:'',stockOnly:false,sent:null,sel:{}};
 // The cart is saved per login, so on a shared PC one buyer never sees another's cart; sign-out clears it.
 const cartKey=()=>'wau.cart.'+(S.me?S.me.email:'');
-function loadCart(){try{localStorage.removeItem('wau.cart');S.cart=S.me&&JSON.parse(localStorage.getItem(cartKey())||'{}')||{}}catch(_){S.cart={}}}
+function loadCart(){try{localStorage.removeItem('wau.cart');S.cart=S.me&&JSON.parse(localStorage.getItem(cartKey())||'{}')||{};S.revise=S.me&&JSON.parse(localStorage.getItem(cartKey()+'.revise')||'null')}catch(_){S.cart={};S.revise=null}}
 const saveCart=()=>{try{if(S.me)localStorage.setItem(cartKey(),JSON.stringify(S.cart))}catch(_){}};
 function clearCart(){try{localStorage.removeItem(cartKey())}catch(_){}S.cart={}}
 
@@ -719,12 +726,13 @@ function cartHtml(){
 }
 // Deliver to: the address on file and addresses used before, newest used one preselected; or type another one.
 function addrPicker(){
- const A=S.addresses||[],pick=A.findIndex(a=>a.kind==='used'),sel=pick<0?0:pick;
- if(!A.length)return `<label class="f" for="o-addr">Deliver to<input class="inp" id="o-addr" maxlength="300" placeholder="Street, city, contact on site"></label>`;
+ const A=S.addresses||[],was=S.revise?.deliver_to||'',hit=was?A.findIndex(a=>a.text===was):-1,pick=A.findIndex(a=>a.kind==='used');
+ const sel=was?(hit<0?'new':hit):(pick<0?0:pick);
+ if(!A.length)return `<label class="f" for="o-addr">Deliver to<input class="inp" id="o-addr" maxlength="300" placeholder="Street, city, contact on site" value="${esc(was)}"></label>`;
  return `<fieldset class="addr"><legend>Deliver to</legend>
   ${A.map((a,i)=>`<label class="opt"><input type="radio" name="addr" value="${i}" ${i===sel?'checked':''}><span><b>${a.kind==='file'?'Address on file':'Used before'}</b><small>${esc(a.text)}</small></span></label>`).join('')}
-  <label class="opt"><input type="radio" name="addr" value="new"><span><b>Another address</b></span></label>
-  <input class="inp" id="o-addr" maxlength="300" placeholder="Street, city, contact on site" aria-label="Another delivery address" hidden></fieldset>`;
+  <label class="opt"><input type="radio" name="addr" value="new" ${sel==='new'?'checked':''}><span><b>Another address</b></span></label>
+  <input class="inp" id="o-addr" maxlength="300" placeholder="Street, city, contact on site" aria-label="Another delivery address" value="${sel==='new'?esc(was):''}" ${sel==='new'?'':'hidden'}></fieldset>`;
 }
 function deliverTo(){const r=document.querySelector('input[name=addr]:checked');return !r||r.value==='new'?$('#o-addr').value:S.addresses[+r.value].text}
 function checkoutView(){
@@ -736,15 +744,16 @@ function checkoutView(){
  return `<div>${back}<div class="pagehead"><div><h1>Request details</h1><p class="muted">Tell us where and when to deliver. Our sales team sends you the price and delivery date, and makes your sales order (SO) once you agree.</p></div></div></div>
  <div class="grid-side checkout">
   <form class="panel panel-b form" id="orderform" novalidate>
+   ${S.revise?`<div class="alert" style="background:var(--warn-soft)"><span>Revising <b class="mono">${esc(S.revise.ref)}</b>. Sending replaces that request; our sales team sees it as revised.</span><button type="button" class="link" data-act="unrevise">Stop revising</button></div>`:''}
    <h2>Delivery</h2>
-   <label class="f" for="o-po">Your PO number<input class="inp" id="o-po" maxlength="60" placeholder="Optional"></label>
+   <label class="f" for="o-po">Your PO number<input class="inp" id="o-po" maxlength="60" placeholder="Optional" value="${esc(S.revise?.po||'')}"></label>
    ${addrPicker()}
-   <label class="f" for="o-date">Requested delivery date<input class="inp" id="o-date" type="date" min="${tomorrow}"></label>
-   <label class="f" for="o-notes">Notes for our team<textarea class="inp" id="o-notes" maxlength="1000" placeholder="Unloading hours, contact on site, special color or spec"></textarea></label>
+   <label class="f" for="o-date">Requested delivery date<input class="inp" id="o-date" type="date" min="${tomorrow}" value="${esc(S.revise?.date&&S.revise.date>=tomorrow?S.revise.date:'')}"></label>
+   <label class="f" for="o-notes">Notes for our team<textarea class="inp" id="o-notes" maxlength="1000" placeholder="Unloading hours, contact on site, special color or spec">${esc(S.revise?.notes||'')}</textarea></label>
    <p class="note">Prices are not shown here: our sales team sends you a quote.</p>
    ${oos?oosNote(oos):''}
    <p class="send-err" id="o-err" role="alert" hidden></p>
-   <button class="btn btn-primary" type="submit" data-busy="Sending…">Send quote request</button>
+   <button class="btn btn-primary" type="submit" data-busy="Sending…">${S.revise?'Send revised request':'Send quote request'}</button>
   </form>
   <aside class="panel summary"><div class="panel-b form"><div class="sum-h"><h2>Your request</h2><button class="link" data-act="cart">Edit quote list</button></div>
    <div class="lines">${L.map(x=>lineHtml(x,false)).join('')}</div>${totalsHtml(L)}</div></aside>
@@ -754,7 +763,7 @@ function sentView(){
  const c=S.contact||{};
  return `<section class="panel" style="max-width:560px;margin:24px auto 0"><div class="panel-b" style="display:grid;gap:14px;text-align:center;justify-items:center;padding:36px 24px">
   <span style="color:var(--good)">${ic('check').replace('class="i"','class="i drawn" style="width:48px;height:48px"')}</span>
-  <h1>Quote request sent</h1>
+  <h1>${S.sent.revised?'Quote request revised':'Quote request sent'}</h1>
   <p class="muted">Your reference is <b class="mono" style="color:var(--ink)">${esc(S.sent.ref)}</b> · ${rolls(S.sent.rolls)}.<br>Our sales team will send you the price and delivery date. Once you agree, they make your sales order (SO). You can follow this request under My orders.</p>
   <p class="note">Questions? Email ${contactLinks(c)} and mention ${esc(S.sent.ref)}.</p>
   <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${S.sent.id?`<button class="btn btn-primary" data-open-req="${S.sent.id}">Track this request</button>`:''}<button class="btn btn-line" data-go="orders">View my orders</button><button class="btn btn-line" data-act="new">Start another order</button></div>
@@ -814,7 +823,7 @@ async function ordersView(){
  const onway=d.orders.filter(o=>o.status!=='Delivered'),done=d.orders.filter(o=>o.status==='Delivered');
  // A request whose SO is made becomes that SO: listed once, as the SO (which names the request).
  const asSO=new Set(d.orders.map(o=>o.no));d.requests=d.requests.filter(r=>!(r.so_number&&asSO.has(r.so_number)));
- const waiting=d.requests.filter(r=>r.status!=='SO created'&&r.status!=='Cannot fulfil');
+ const waiting=d.requests.filter(r=>!['SO created','Cannot fulfil','Cancelled'].includes(r.status));
  const fold=(h,n,body,key)=>`<details class="panel older" data-fold="${key}" ${S.folds&&S.folds[key]?'open':''}><summary class="panel-h"><h2>${h}</h2><span class="muted">${n} <svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary><div class="rows" style="margin-top:10px">${body}</div></details>`;
  const sec=(h,list,row,empty)=>`<section class="panel"><div class="panel-h"><h2>${h}</h2><span class="muted">${list.length}</span></div><div class="rows" style="margin-top:10px">${list.length?list.map(row).join(''):`<div class="empty">${empty}</div>`}</div></section>`;
  return `<div class="pagehead"><div><h1>My orders</h1><p class="muted">Order Received → Order Processed → Shipped → Delivered. Delivered orders move to Past orders. Tap an order to see its shipments.</p></div></div>
@@ -866,7 +875,7 @@ async function detailView(no){
 // confirms it in WAU ERP: status Received by our team), Order Processed once the SO is made and linked; Shipped and
 // Delivered follow on the SO's own page.
 function reqRail(r){
- if(r.status==='Cannot fulfil')return '';
+ if(r.status==='Cannot fulfil'||r.status==='Cancelled')return '';
  const idx=r.status==='SO created'?1:0, ack=r.status!=='Sent';
  const sub=[ack&&r.status_by?`Acknowledged by ${esc(r.status_by)}`:'',dt(ack&&r.status==='Received by our team'?r.status_at:r.created_at)].filter(Boolean).join(' · ');
  const when=[sub,idx?dt(r.status_at):'',''];
@@ -878,11 +887,13 @@ async function requestView(id){
  const r=S.reqs.find(x=>x.id==id);if(!r){S.view='orders';render();return ''}
  if(r.status==='SO created'&&r.so_number){S.view='detail';S.detail=r.so_number;render();return ''}
  S.again={from:r.ref,items:r.data.items};
- const msg=r.status==='SO created'?`Your sales order <b class="mono">${esc(r.so_number)}</b> was created.`:r.status==='Cannot fulfil'?'Our team could not fulfil this request.':r.status==='Received by our team'&&r.status_by?`Your request was acknowledged by ${esc(r.status_by)}, who will send you the price. Tracking starts once the SO is made.`:r.status==='Being processed'?'Our sales team has confirmed your request and is preparing your quote. Tracking starts once the SO is made.':'Our sales team checks your request and sends you a quote. Tracking starts once the SO is made.';
+ const open=!['SO created','Cannot fulfil','Cancelled'].includes(r.status);S.cur=open?r:null;
+ const msg=r.status==='Cancelled'?'You cancelled this request.':r.status==='SO created'?`Your sales order <b class="mono">${esc(r.so_number)}</b> was created.`:r.status==='Cannot fulfil'?'Our team could not fulfil this request.':r.status==='Received by our team'&&r.status_by?`Your request was acknowledged by ${esc(r.status_by)}, who will send you the price. Tracking starts once the SO is made.`:r.status==='Being processed'?'Our sales team has confirmed your request and is preparing your quote. Tracking starts once the SO is made.':'Our sales team checks your request and sends you a quote. Tracking starts once the SO is made.';
  return `<div><button class="back" data-go="orders">${ic('left')}My orders</button>
-  <div class="pagehead"><div><h1>${esc(r.ref)}</h1><p class="muted">Sent ${dt(r.created_at)}${r.data.po?' · Your PO '+esc(r.data.po):''}</p></div><div class="head-acts">${pill(r.status)}<button class="btn btn-line btn-sm" data-act="again">${ic('cart')}Request again</button></div></div></div>
+  <div class="pagehead"><div><h1>${esc(r.ref)}</h1><p class="muted">Sent ${dt(r.created_at)}${r.data.po?' · Your PO '+esc(r.data.po):''}</p></div><div class="head-acts">${pill(r.status)}${open?`<button class="btn btn-line btn-sm" data-act="revise">Revise request</button><button class="btn btn-line btn-sm" data-act="cancelreq">Cancel request</button>`:''}<button class="btn btn-line btn-sm" data-act="again">${ic('cart')}Request again</button></div></div></div>
+ ${r.data.revised?`<p class="note">Revised ${r.data.revised}× · last on ${dt(r.data.revised_at)}</p>`:''}
  ${reqRail(r)}
- <div class="alert" style="background:var(--${r.status==='Cannot fulfil'?'bad':r.status==='SO created'?'good':'warn'}-soft)"><span>${msg}${r.staff_note?' '+esc(r.staff_note):''}</span>${r.status==='SO created'&&r.so_number?`<button class="btn btn-line" data-open-order="${esc(r.so_number)}">Track ${esc(r.so_number)}</button>`:''}</div>
+ <div class="alert" style="background:var(--${r.status==='Cannot fulfil'||r.status==='Cancelled'?'bad':r.status==='SO created'?'good':'warn'}-soft)"><span>${msg}${r.staff_note?' '+esc(r.staff_note):''}</span>${r.status==='SO created'&&r.so_number?`<button class="btn btn-line" data-open-order="${esc(r.so_number)}">Track ${esc(r.so_number)}</button>`:''}</div>
  <section class="panel"><div class="tbl"><table><thead><tr><th>Product</th><th class="r">Rolls</th><th class="r">Meters</th></tr></thead>
   <tbody>${r.data.items.map(i=>`<tr><td>${esc(i.name)} ${esc(i.color_name)} <span class="mono muted">${esc(i.art)}·${esc(i.color)}</span></td><td class="r">${i.rolls}</td><td class="r">${i.meters?num(i.meters)+' m':''}</td></tr>`).join('')}</tbody></table></div>
   ${r.data.deliver_to||r.data.date||r.data.notes?`<div class="panel-b"><dl class="kv">${r.data.deliver_to?`<dt>Deliver to</dt><dd>${esc(r.data.deliver_to)}</dd>`:''}${r.data.date?`<dt>Wanted by</dt><dd>${dt(r.data.date)}</dd>`:''}${r.data.notes?`<dt>Notes</dt><dd>${esc(r.data.notes)}</dd>`:''}</dl></div>`:''}</section>`;
@@ -909,6 +920,22 @@ function redraw(sel,html,fallback){
   :card?`[data-card="${CSS.escape(card.dataset.card)}"] ${a.name==='rolls'?'input':'button[type=submit]'}`:a.dataset.act?`[data-act="${a.dataset.act}"]`:null;
  box.innerHTML=html();
  if(key||fallback){const x=box.querySelector(key||fallback)||(fallback&&box.querySelector(fallback));if(x&&(key||a===document.body))x.focus({preventScroll:true})}
+}
+// Revise: the request's products replace the quote list and its details fill the checkout; sending updates the same
+// request (api order_request with revise). Kept in this browser until sent or stopped, like the quote list.
+function setRevise(v){S.revise=v;try{v?localStorage.setItem(cartKey()+'.revise',JSON.stringify(v)):localStorage.removeItem(cartKey()+'.revise')}catch(_){}}
+async function reviseRequest(){
+ const r=S.cur;if(!r)return;
+ if(cartLines().length&&!confirm(tr('Your quote list will be replaced by the products of this request. Continue?')))return;
+ if(!S.products){try{S.products=(await api('products')).products}catch(e){toast(e.message);return}}
+ const cart={},gone=[];for(const it of r.data.items){const k=it.art+'|'+it.color;if(prodOf(k))cart[k]=+it.rolls||1;else gone.push(it.name+' '+it.color_name)}
+ S.cart=cart;saveCart();setRevise({id:r.id,ref:r.ref,po:r.data.po||'',deliver_to:r.data.deliver_to||'',date:r.data.date||'',notes:r.data.notes||''});
+ S.view='checkout';window.scrollTo(0,0);render();
+ if(gone.length)toast(`Not available any more: ${gone.join(', ')}.`);
+}
+async function cancelRequest(){
+ const r=S.cur;if(!r||!confirm(tr('Cancel this request? Our sales team will not work on it any more.')))return;
+ try{await api('request_cancel',{id:r.id});S.reqs=null;if(S.revise&&S.revise.id===r.id)setRevise(null);toast('Request cancelled.');render()}catch(e){toast(e.message)}
 }
 // Request again: the products of the order on screen go into the cart with the same rolls (added to what is there).
 // Products the customer can no longer order (inactive, or a custom article for someone else) are named, not added.
@@ -946,8 +973,8 @@ document.addEventListener('submit',async e=>{
   if(f.id==='orderform'){
    err('#o-err','');
    const items=Object.keys(S.cart).map(k=>{const [art,color]=k.split('|');return {art,color,rolls:S.cart[k]}});
-   const r=await api('order_request',{items,po:$('#o-po').value,deliver_to:deliverTo(),date:$('#o-date').value,notes:$('#o-notes').value});
-   S.sent={id:r.id,ref:r.ref,rolls:cartRolls()};S.reqs=null;S.addresses=null;S.cart={};saveCart();S.view='sent';render();window.scrollTo(0,0);return}
+   const r=await api('order_request',{items,po:$('#o-po').value,deliver_to:deliverTo(),date:$('#o-date').value,notes:$('#o-notes').value,revise:S.revise?S.revise.id:0});
+   S.sent={id:r.id,ref:r.ref,rolls:cartRolls(),revised:!!r.revised};setRevise(null);S.reqs=null;S.addresses=null;S.cart={};saveCart();S.view='sent';render();window.scrollTo(0,0);return}
  }catch(ex){
   // the error stays next to the button that failed (kept until the next try), the order and typed details stay as they were
   const id={login:'#l-err',pwform:'#p-err',orderform:'#o-err'}[f.id];
@@ -991,6 +1018,9 @@ document.addEventListener('click',async e=>{
  if(d.act==='lang'){LANG=LANG==='id'?'en':'id';try{localStorage.setItem('wau.lang',LANG)}catch(_){}document.documentElement.lang=LANG;settle.last=undefined;render();return}
  if(d.act==='cart'){openCart();return}
  if(d.act==='again'){orderAgain();return}
+ if(d.act==='revise'){reviseRequest();return}
+ if(d.act==='cancelreq'){cancelRequest();return}
+ if(d.act==='unrevise'){setRevise(null);render();return}
  if(d.act==='closecart'){$('#cart').close();return}
  if(d.act==='checkout'){$('#cart').close();S.view='checkout';window.scrollTo(0,0);render();return}
  if(d.pick){const [art,color]=d.pick.split('|');S.sel[art]=color;redraw('#plist',shopCards);return}
