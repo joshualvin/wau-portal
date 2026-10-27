@@ -316,7 +316,10 @@ details.older[open]>summary{padding-bottom:0}
 .shop-head .filters{flex:0 1 440px;flex-wrap:nowrap}
 .shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,236px),1fr));gap:12px}
 .pcard{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;min-width:0}
-.tile{background-color:var(--c,var(--bg));background-image:radial-gradient(circle at 30% 30%,rgba(255,255,255,.09) 0 1px,transparent 1.5px),radial-gradient(circle at 70% 60%,rgba(0,0,0,.16) 0 1.2px,transparent 1.7px),linear-gradient(160deg,rgba(255,255,255,.18),rgba(0,0,0,.18));background-size:6px 6px,8px 8px,100% 100%}
+/* leather: a pebbled grain (noise lit from the top left, blended over the color) and a soft sheen */
+.tile{position:relative;overflow:hidden;background-color:var(--c,var(--bg));background-image:linear-gradient(160deg,rgba(255,255,255,.16),rgba(255,255,255,0) 45%,rgba(0,0,0,.22))}
+.tile::before{content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;opacity:.55;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='g' x='0' y='0'><feTurbulence type='fractalNoise' baseFrequency='.5' numOctaves='3' seed='11' stitchTiles='stitch'/><feDiffuseLighting lighting-color='%23fff' surfaceScale='2' diffuseConstant='1.1'><feDistantLight azimuth='225' elevation='52'/></feDiffuseLighting></filter><rect width='100%25' height='100%25' filter='url(%23g)'/></svg>") 0 0/180px 180px}
+.tile.plain span{position:relative}
 .mini,.dot-c{background-color:var(--c,var(--bg))} /* swatches are flat, solid colors */
 .tile{height:56px;flex:none;display:grid;place-items:center;transition:background-color .25s var(--ease-out)}
 .tile.plain span{color:var(--muted);font-size:.82rem;padding:0 12px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
