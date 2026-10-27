@@ -202,7 +202,7 @@ case 'order_request':
     $items[] = array('art' => (string)$it['art'], 'color' => (string)$it['color'], 'rolls' => $r);
   }
   if (!$items) bad('Add at least one product.');
-  if (count($items) > 50) bad('An order can have up to 50 products.');
+  if (count($items) > 50) bad('A request can have up to 50 products.');
   $date = isset($in['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $in['date']) ? $in['date'] : '';
   $payload = array('items' => $items, 'po' => substr(trim((string)$in['po']), 0, 60), 'deliver_to' => substr(trim((string)$in['deliver_to']), 0, 300),
     'date' => $date, 'notes' => substr(trim((string)$in['notes']), 0, 1000));

@@ -438,7 +438,7 @@ details.older .chev{transition:transform .22s var(--ease-out)}
 <div class="toast" id="toast" role="status" hidden></div>
 <script>
 (function(){
-/* WAU customer portal · sign in and send an order request. Data comes from api/portal.php for the signed-in customer only. */
+/* WAU customer portal · sign in and request a quote (sales sets the price). Data comes from api/portal.php for the signed-in customer only. */
 const I={
  left:'<path d="M15 5l-7 7 7 7"/>',
  box:'<path d="M3 7.5L12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5l9 4.5 9-4.5M12 12v9"/>',
@@ -462,7 +462,7 @@ let LANG=(()=>{try{return localStorage.getItem('wau.lang')||'id'}catch(_){return
 const ID={
  'WAU Order Portal':'Portal Pesanan WAU','CUSTOMER PORTAL':'PORTAL PELANGGAN','WELCOME':'SELAMAT DATANG','CHANGE PASSWORD':'GANTI KATA SANDI',
  'Back to wautama.com':'Kembali ke wautama.com','Sign in':'Masuk','Sign out':'Keluar','Signing in…':'Sedang masuk…',
- 'Send your order requests for SIMNU synthetic leather.':'Kirim permintaan pesanan kulit sintetis SIMNU.',
+ 'Request quotes for SIMNU synthetic leather and follow your orders.':'Kirim permintaan pesanan kulit sintetis SIMNU.',
  'Email or username':'Email atau nama pengguna','Password':'Kata sandi',
  'Accounts are created by our sales team. Need access or forgot your password? Email':'Akun dibuat oleh tim penjualan kami. Butuh akses atau lupa kata sandi? Email',
  'or call':'atau telepon','and mention':'dan sebutkan','Questions? Email':'Ada pertanyaan? Email',
@@ -472,44 +472,44 @@ const ID={
  'Temporary password':'Kata sandi sementara','Current password':'Kata sandi saat ini','New password':'Kata sandi baru','Repeat new password':'Ulangi kata sandi baru',
  'Save password':'Simpan kata sandi','Saving…':'Menyimpan…','Cancel':'Batal','Password saved.':'Kata sandi tersimpan.',
  'The two new passwords are not the same.':'Kedua kata sandi baru tidak sama.',
- 'Pages':'Halaman','New order':'Pesanan baru','My orders':'Pesanan saya','Cart':'Keranjang',
- 'New order request':'Permintaan pesanan baru',
- 'Pick a color, type the rolls and add them to your cart. Our sales team confirms price and delivery.':'Pilih warna, ketik jumlah rol, lalu masukkan ke keranjang. Tim penjualan kami akan mengonfirmasi harga dan pengiriman.',
+ 'Pages':'Halaman','Request a quote':'Minta penawaran','My orders':'Pesanan saya','Quote list':'Daftar penawaran',
+ 'Request a price quote':'Minta penawaran harga',
+ 'Pick a color, type the rolls and add them to your quote list. Our sales team sends you the price and delivery date.':'Pilih warna, ketik jumlah rol, lalu masukkan ke daftar penawaran. Tim penjualan kami akan mengirimkan harga dan tanggal kirim.',
  'In stock only':'Hanya yang tersedia','Search article, color or code':'Cari artikel, warna, atau kode','Search products':'Cari produk',
- 'In stock':'Tersedia','Out of stock':'Stok habis','Add to cart':'Tambahkan','Update cart':'Perbarui','rolls':'rol',
- 'No products match your search.':'Tidak ada produk yang cocok.','Loading products…':'Memuat produk…','Loading your cart…':'Memuat keranjang Anda…',
+ 'In stock':'Tersedia','Out of stock':'Stok habis','Add to quote':'Tambahkan','Update quote':'Perbarui','rolls':'rol',
+ 'No products match your search.':'Tidak ada produk yang cocok.','Loading products…':'Memuat produk…','Loading your quote list…':'Memuat daftar penawaran Anda…',
  'Loading your orders…':'Memuat pesanan Anda…','Try again':'Coba lagi','Portal unavailable':'Portal tidak tersedia',
- 'Your cart':'Keranjang Anda','Close cart':'Tutup keranjang','Checkout':'Checkout','Keep shopping':'Lanjut belanja','View cart':'Lihat keranjang','in your cart':'di keranjang',
- 'Your cart is empty.':'Keranjang Anda kosong.','Pick a color on a product, type the rolls and press Add to cart.':'Pilih warna pada produk, ketik jumlah rol, lalu tekan Tambahkan.',
- 'Your agreed prices are applied when our sales team creates the SO.':'Harga yang sudah disepakati berlaku saat tim penjualan kami membuat SO.',
+ 'Your quote list':'Daftar penawaran Anda','Close quote list':'Tutup daftar','Continue':'Lanjutkan','Request details':'Detail permintaan','Add more products':'Tambah produk lain','View quote list':'Lihat daftar','in your quote list':'di daftar penawaran',
+ 'Your quote list is empty.':'Daftar penawaran Anda kosong.','Pick a color on a product, type the rolls and press Add to quote.':'Pilih warna pada produk, ketik jumlah rol, lalu tekan Tambahkan.',
+ 'Prices are not shown here: our sales team sends you a quote.':'Harga tidak ditampilkan di sini: tim penjualan kami akan mengirimkan penawaran harga.',
  'Type how many rolls you need first.':'Ketik dulu jumlah rol yang Anda butuhkan.',
  'Back to products':'Kembali ke produk','Delivery':'Pengiriman','Your PO number':'Nomor PO Anda','Optional':'Opsional',
- 'Tell us where and when to deliver. Our sales team creates your SO and confirms price and delivery.':'Beri tahu kami ke mana dan kapan barang dikirim. Tim penjualan kami membuat SO dan mengonfirmasi harga serta pengiriman.',
+ 'Tell us where and when to deliver. Our sales team sends you the price and delivery date, and makes your sales order (SO) once you agree.':'Beri tahu kami ke mana dan kapan barang dikirim. Tim penjualan kami akan mengirimkan harga dan tanggal kirim, lalu membuat SO setelah Anda setuju.',
  'Deliver to':'Kirim ke','Address on file':'Alamat terdaftar','Used before':'Pernah dipakai','Another address':'Alamat lain',
  'Another delivery address':'Alamat pengiriman lain','Street, city, contact on site':'Jalan, kota, kontak di lokasi',
  'Requested delivery date':'Tanggal kirim yang diminta','Notes for our team':'Catatan untuk tim kami',
  'Unloading hours, contact on site, special color or spec':'Jam bongkar, kontak di lokasi, warna atau spesifikasi khusus',
- 'Send order request':'Kirim permintaan pesanan','Sending…':'Mengirim…','Your order':'Pesanan Anda','Edit cart':'Ubah keranjang',
- 'Order request sent':'Permintaan pesanan terkirim','Your reference is':'Nomor referensi Anda','Start another order':'Buat pesanan lain',
- 'View my orders':'Lihat pesanan saya','Track this request':'Lacak permintaan ini','Order again':'Pesan lagi',
- 'Our sales team will contact you to confirm price and delivery. You can follow this request under My orders, also before the sales order is made.':'Tim penjualan kami akan menghubungi Anda untuk mengonfirmasi harga dan pengiriman. Anda bisa memantau permintaan ini di Pesanan saya, juga sebelum SO dibuat.',
+ 'Send quote request':'Kirim permintaan penawaran','Sending…':'Mengirim…','Your request':'Permintaan Anda','Edit quote list':'Ubah daftar',
+ 'Quote request sent':'Permintaan penawaran terkirim','Your reference is':'Nomor referensi Anda','Start another order':'Buat pesanan lain',
+ 'View my orders':'Lihat pesanan saya','Track this request':'Lacak permintaan ini','Request again':'Minta lagi',
+ 'Our sales team will send you the price and delivery date. Once you agree, they make your sales order (SO). You can follow this request under My orders.':'Tim penjualan kami akan mengirimkan harga dan tanggal kirim. Setelah Anda setuju, mereka membuat SO. Anda bisa memantau permintaan ini di Pesanan saya.',
  'Order Received → Order Processed → Shipped → Delivered. Delivered orders move to Past orders. Tap an order to see its shipments.':'Pesanan diterima → Pesanan diproses → Dikirim → Sudah sampai. Pesanan yang sudah sampai pindah ke Pesanan selesai. Ketuk pesanan untuk melihat pengirimannya.',
  'Find an SO, SJ, PO or product':'Cari SO, SJ, PO, atau produk','Find an order':'Cari pesanan','No order matches that number.':'Tidak ada pesanan dengan nomor itu.',
- 'Requests waiting for a sales order':'Permintaan menunggu SO','In progress':'Sedang berjalan','Nothing in progress right now.':'Belum ada pesanan yang berjalan.',
- 'Past orders':'Pesanan selesai','Earlier requests':'Permintaan sebelumnya',
+ 'Quote requests waiting for a sales order':'Permintaan penawaran menunggu SO','In progress':'Sedang berjalan','Nothing in progress right now.':'Belum ada pesanan yang berjalan.',
+ 'Past orders':'Pesanan selesai','Earlier quote requests':'Permintaan penawaran sebelumnya',
  'Products':'Produk','Product':'Produk','Rolls':'Rol','Meters':'Meter','Shipments':'Pengiriman','Wanted by':'Diminta tanggal','Notes':'Catatan',
  'Prepared':'Disiapkan','Done':'Selesai','Pending':'Menunggu',
  'Order Received':'Pesanan diterima','Order Processed':'Pesanan diproses','Shipped':'Dikirim','Delivered':'Sudah sampai','Partly delivered':'Sebagian sampai',
  'Being prepared':'Sedang disiapkan','Sent':'Terkirim','Received by our team':'Diterima tim kami','Being processed':'Sedang diproses',
  'SO created':'SO dibuat','Cannot fulfil':'Tidak dapat dipenuhi','Acknowledged':'Dikonfirmasi',
- 'Our sales team checks your request and creates your sales order. Tracking starts once the SO is made.':'Tim penjualan kami memeriksa permintaan Anda dan membuat SO. Pelacakan dimulai setelah SO dibuat.',
- 'Our sales team has confirmed your request and is making your sales order. Tracking starts once the SO is made.':'Tim penjualan kami telah mengonfirmasi permintaan Anda dan sedang membuat SO. Pelacakan dimulai setelah SO dibuat.',
+ 'Our sales team checks your request and sends you a quote. Tracking starts once the SO is made.':'Tim penjualan kami memeriksa permintaan Anda dan mengirimkan penawaran harga. Pelacakan dimulai setelah SO dibuat.',
+ 'Our sales team has confirmed your request and is preparing your quote. Tracking starts once the SO is made.':'Tim penjualan kami telah mengonfirmasi permintaan Anda dan sedang menyiapkan penawaran harga. Pelacakan dimulai setelah SO dibuat.',
  'Our team could not fulfil this request.':'Tim kami tidak dapat memenuhi permintaan ini.',
  'We have your order. A delivery note (SJ) is made when your rolls are prepared; it shows here with its own tracking.':'Pesanan Anda sudah kami terima. Surat jalan (SJ) dibuat saat rol Anda disiapkan; SJ akan muncul di sini dengan pelacakannya sendiri.',
  'Cannot reach the portal. Check your internet connection and try again.':'Portal tidak dapat dihubungi. Periksa koneksi internet Anda lalu coba lagi.',
  'Please sign in again.':'Silakan masuk lagi.','Something went wrong.':'Terjadi kesalahan.',
  // messages from the server (public/api/portal.php, app/lib.php)
- 'Add at least one product.':'Tambahkan minimal satu produk.','An order can have up to 50 products.':'Satu pesanan maksimal 50 produk.',
+ 'Add at least one product.':'Tambahkan minimal satu produk.','A request can have up to 50 products.':'Satu permintaan maksimal 50 produk.',
  'Choose a password different from the current one.':'Pilih kata sandi yang berbeda dari yang sekarang.',
  'Enter your email or username, and your password.':'Masukkan email atau nama pengguna, dan kata sandi Anda.',
  'One of the products is not available. Reload the page and try again.':'Salah satu produk tidak tersedia. Muat ulang halaman lalu coba lagi.',
@@ -524,15 +524,15 @@ const ID={
 // Sentences with numbers or names in them; applied in this order, then the plain roll counts.
 const ID_RX=[
  [/^(\d+) colors? (?:is|are) out of stock\. You can still request (?:it|them); our sales team confirms whether we can supply (?:it|them) and when\.$/,'$1 warna stoknya habis. Anda tetap bisa memintanya; tim penjualan kami akan mengonfirmasi apakah dan kapan warna tersebut bisa kami sediakan.'],
- [/^Your order request was not sent\. (.*)$/,(m,rest)=>'Permintaan pesanan Anda belum terkirim. '+tr(rest)],
- [/^Added to cart: (.+) of (.+)\.$/,'Masuk keranjang: $1 $2.'],[/^Cart updated: (.+) of (.+)\.$/,'Keranjang diperbarui: $1 $2.'],
- [/^Removed (.+) from your cart\.$/,'$1 dihapus dari keranjang.'],
- [/^Added (\d+) products? of (.+?) to your cart\./,'$1 produk dari $2 masuk ke keranjang.'],[/ Not available any more: (.+)\.$/,' Sudah tidak tersedia: $1.'],
- [/^None of the products of (.+) can be ordered now\./,'Tidak ada produk dari $1 yang bisa dipesan sekarang.'],
- [/^Your request was acknowledged by (.+), who is making your sales order\. Tracking starts once the SO is made\.$/,'Permintaan Anda telah dikonfirmasi oleh $1, yang sedang membuat SO Anda. Pelacakan dimulai setelah SO dibuat.'],
+ [/^Your quote request was not sent\. (.*)$/,(m,rest)=>'Permintaan penawaran Anda belum terkirim. '+tr(rest)],
+ [/^Added to quote list: (.+) of (.+)\.$/,'Masuk daftar penawaran: $1 $2.'],[/^Quote list updated: (.+) of (.+)\.$/,'Daftar penawaran diperbarui: $1 $2.'],
+ [/^Removed (.+) from your quote list\.$/,'$1 dihapus dari daftar penawaran.'],
+ [/^Added (\d+) products? of (.+?) to your quote list\./,'$1 produk dari $2 masuk ke daftar penawaran.'],[/ Not available any more: (.+)\.$/,' Sudah tidak tersedia: $1.'],
+ [/^None of the products of (.+) can be requested now\./,'Tidak ada produk dari $1 yang bisa diminta sekarang.'],
+ [/^Your request was acknowledged by (.+), who will send you the price\. Tracking starts once the SO is made\.$/,'Permintaan Anda telah dikonfirmasi oleh $1, yang akan mengirimkan harga kepada Anda. Pelacakan dimulai setelah SO dibuat.'],
  [/^Acknowledged by (.+?)( · |$)/,'Dikonfirmasi oleh $1$2'],[/^Track (.+)$/,'Lacak $1'],
- [/^(\d+) rolls? of this article in your cart$/,'$1 rol artikel ini ada di keranjang'],[/^Cart, (\d+) products?$/,'Keranjang, $1 produk'],
- [/^Remove (.+)$/,'Hapus $1'],[/^Rolls of (.+)$/,'Jumlah rol $1'],[/^Color of (.+)$/,'Warna $1'],[/, out of stock/,', stok habis'],[/, (\d+) rolls? in cart/,', $1 rol di keranjang'],
+ [/^(\d+) rolls? of this article in your quote list$/,'$1 rol artikel ini ada di daftar penawaran'],[/^Quote list, (\d+) products?$/,'Daftar penawaran, $1 produk'],
+ [/^Remove (.+)$/,'Hapus $1'],[/^Rolls of (.+)$/,'Jumlah rol $1'],[/^Color of (.+)$/,'Warna $1'],[/, out of stock/,', stok habis'],[/, (\d+) rolls? in quote list/,', $1 rol di daftar penawaran'],
  [/^Ordered /,'Dipesan '],[/From your request/,'Dari permintaan Anda'],[/^Sent (\d)/,'Dikirim $1'],[/Your PO /,'PO Anda '],
  [/^Shipment (\d+) of (\d+)$/,'Pengiriman $1 dari $2'],[/^Shipment (\d+)$/,'Pengiriman $1'],[/· (\d+) delivery notes?/,'· $1 surat jalan'],
  [/(\d+) rolls? still to come on a next delivery\./,'$1 rol lagi menyusul di pengiriman berikutnya.'],
@@ -595,7 +595,7 @@ const brand=sub=>`<div class="brandrow"><span class="mark">WAU</span><span><b>Wa
 function loginView(){
  const c=S.contact||{};
  return `<div class="login"><div class="login-card"><div class="login-top"><a class="back" href="https://wautama.com">${ic('left')}Back to wautama.com</a>${langBtn()}</div>${brand('CUSTOMER PORTAL')}
-  <div><h1>Sign in</h1><p class="muted" style="margin-top:6px">Send your order requests for SIMNU synthetic leather.</p></div>
+  <div><h1>Sign in</h1><p class="muted" style="margin-top:6px">Request quotes for SIMNU synthetic leather and follow your orders.</p></div>
   <form id="login" class="form" novalidate>
    <label class="f" for="l-email">Email or username<input class="inp" id="l-email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
    <label class="f" for="l-pass">Password<input class="inp" id="l-pass" type="password" autocomplete="current-password" required></label>
@@ -620,8 +620,8 @@ function passwordView(first){
 
 /* ---------------- order page ---------------- */
 /* One card per article: pick a color swatch, type the rolls, Add to cart. The cart opens in a side drawer; Checkout asks for delivery details. */
-const cartLabel=()=>{const n=cartLines().length;return `Cart, ${n} product${n===1?'':'s'}`};
-const cartbarHtml=()=>`<div class="cartbar"><span><b>${rolls(cartRolls())}</b> in your cart</span><button class="btn btn-primary" data-act="cart">View cart</button></div>`;
+const cartLabel=()=>{const n=cartLines().length;return `Quote list, ${n} product${n===1?'':'s'}`};
+const cartbarHtml=()=>`<div class="cartbar"><span><b>${rolls(cartRolls())}</b> in your quote list</span><button class="btn btn-primary" data-act="cart">View quote list</button></div>`;
 function shell(inner){
  const wide=S.view==='order'?' wide':''; // the product grid uses the whole window; reading pages keep a comfortable width
  return `<div class="main">
@@ -629,13 +629,13 @@ function shell(inner){
    <div class="brandrow"><span class="mark">WAU</span><span><b style="font-size:.95rem">${esc(S.me.company)}</b><small>${esc(S.me.name||S.me.email)}</small></span></div>
    <div style="display:flex;gap:6px;align-items:center">
     ${langBtn()}
-    <button class="btn btn-ghost cartbtn" data-act="cart" aria-haspopup="dialog" aria-label="${cartLabel()}">${ic('cart')}<span class="hide-xs">Cart</span><span class="dot"${cartLines().length?'':' hidden'}>${cartLines().length}</span></button>
+    <button class="btn btn-ghost cartbtn" data-act="cart" aria-haspopup="dialog" aria-label="${cartLabel()}">${ic('cart')}<span class="hide-xs">Quote list</span><span class="dot"${cartLines().length?'':' hidden'}>${cartLines().length}</span></button>
     <button class="btn btn-ghost" data-act="password" title="Change password" aria-label="Change password">${ic('key')}<span class="hide-xs">Password</span></button>
     <button class="btn btn-ghost" data-act="logout" title="Sign out" aria-label="Sign out">${ic('out')}<span class="hide-xs">Sign out</span></button>
    </div>
   </header>
   <nav class="tabs" aria-label="Pages"><div>
-   <button data-go="order" ${['order','checkout','sent'].includes(S.view)?'aria-current="page"':''}>${ic('plus')}New order</button>
+   <button data-go="order" ${['order','checkout','sent'].includes(S.view)?'aria-current="page"':''}>${ic('plus')}Request a quote</button>
    <button data-go="orders" ${['orders','detail','request'].includes(S.view)?'aria-current="page"':''}>${ic('box')}My orders</button>
   </div></nav>
   <main class="content${wide}" id="content" style="margin:0 auto">${inner}</main>
@@ -663,7 +663,7 @@ function hueOf(name){
 const tint=h=>h?`style="--c:${h}"`:'';
 function orderView(){
  if(!S.products)return `<div class="panel empty" style="padding:48px 20px">Loading products…</div>`;
- return `<div class="shop-head"><div><h1>New order request</h1><p class="muted">Pick a color, type the rolls and add them to your cart. Our sales team confirms price and delivery.</p></div>
+ return `<div class="shop-head"><div><h1>Request a price quote</h1><p class="muted">Pick a color, type the rolls and add them to your quote list. Our sales team sends you the price and delivery date.</p></div>
  <div class="filters"><button class="chip" data-act="stockonly" aria-pressed="${S.stockOnly}">In stock only</button>
   <input class="inp search" id="q" type="search" placeholder="Search article, color or code" value="${esc(S.q)}" aria-label="Search products"></div></div>
  <div class="shop" id="plist">${shopCards()}</div>`;
@@ -690,11 +690,11 @@ function card(g){
   <div class="pbody">
    <div class="ptitle"><h3>${esc(g.name)}</h3><span class="mono muted">${esc(g.art)}</span></div>
    <div class="sw" role="radiogroup" aria-label="Color of ${esc(g.name)}">${g.colors.map(c=>{const h=hueOf(c.color_name),inc=S.cart[c.art+'|'+c.color];
-    return `<button type="button" role="radio" aria-checked="${c.color===p.color}" class="dot-c${h?'':' plain'}${c.stock==='out'?' oos':''}${inc?' inc':''}" ${tint(h)} data-pick="${esc(c.art+'|'+c.color)}" title="${esc(c.color_name)}" aria-label="${esc(c.color_name)}${c.stock==='out'?', out of stock':''}${inc?', '+rolls(inc)+' in cart':''}"></button>`}).join('')}</div>
+    return `<button type="button" role="radio" aria-checked="${c.color===p.color}" class="dot-c${h?'':' plain'}${c.stock==='out'?' oos':''}${inc?' inc':''}" ${tint(h)} data-pick="${esc(c.art+'|'+c.color)}" title="${esc(c.color_name)}" aria-label="${esc(c.color_name)}${c.stock==='out'?', out of stock':''}${inc?', '+rolls(inc)+' in quote list':''}"></button>`}).join('')}</div>
    <p class="pcolor"><span><b>${esc(p.color_name)}</b> <span class="mono muted">${esc(p.color)}</span>${p.roll_m?`<span class="muted"> · ${num(p.roll_m)} m/roll</span>`:''}</span>${stockPill(p)}</p>
    <form class="buy" data-buy="${esc(k)}" novalidate><label class="qty"><input type="number" inputmode="numeric" min="1" max="999" step="1" placeholder="0" value="${n||''}" name="rolls" aria-label="Rolls of ${esc(g.name+' '+p.color_name)}"><span>rolls</span></label>
-    <button class="btn ${n?'btn-line':'btn-primary'} btn-sm" type="submit">${n?'Update cart':'Add to cart'}</button></form>
-   ${inCart?`<p class="incart">${ic('cart')}${rolls(inCart)} of this article in your cart</p>`:''}
+    <button class="btn ${n?'btn-line':'btn-primary'} btn-sm" type="submit">${n?'Update quote':'Add to quote'}</button></form>
+   ${inCart?`<p class="incart">${ic('cart')}${rolls(inCart)} of this article in your quote list</p>`:''}
   </div></article>`;
 }
 // The customer types how many rolls they want of each color.
@@ -711,11 +711,11 @@ function lineHtml(x,edit){
 }
 function cartHtml(){
  const L=cartLines(),oos=L.filter(x=>x.p.stock==='out').length;
- return `<div class="dr-h"><h2 id="cart-h">Your cart</h2><button class="btn btn-ghost" data-act="closecart" aria-label="Close cart">${ic('x')}</button></div>
+ return `<div class="dr-h"><h2 id="cart-h">Your quote list</h2><button class="btn btn-ghost" data-act="closecart" aria-label="Close quote list">${ic('x')}</button></div>
  ${L.length?`<div class="dr-b"><div class="lines">${L.map(x=>lineHtml(x,true)).join('')}</div></div>
- <div class="dr-f">${totalsHtml(L)}${oos?oosNote(oos):''}<p class="note">Your agreed prices are applied when our sales team creates the SO.</p>
-  <button class="btn btn-primary" data-act="checkout">Checkout</button><button class="btn btn-ghost" data-act="closecart">Keep shopping</button></div>`
- :`<div class="dr-b empty"><p>Your cart is empty.</p><p class="note" style="margin-top:6px">Pick a color on a product, type the rolls and press Add to cart.</p></div>`}`;
+ <div class="dr-f">${totalsHtml(L)}${oos?oosNote(oos):''}<p class="note">Prices are not shown here: our sales team sends you a quote.</p>
+  <button class="btn btn-primary" data-act="checkout">Continue</button><button class="btn btn-ghost" data-act="closecart">Add more products</button></div>`
+ :`<div class="dr-b empty"><p>Your quote list is empty.</p><p class="note" style="margin-top:6px">Pick a color on a product, type the rolls and press Add to quote.</p></div>`}`;
 }
 // Deliver to: the address on file and addresses used before, newest used one preselected; or type another one.
 function addrPicker(){
@@ -728,12 +728,12 @@ function addrPicker(){
 }
 function deliverTo(){const r=document.querySelector('input[name=addr]:checked');return !r||r.value==='new'?$('#o-addr').value:S.addresses[+r.value].text}
 function checkoutView(){
- if(!S.products)return `<div class="panel empty" style="padding:48px 20px">Loading your cart…</div>`;
+ if(!S.products)return `<div class="panel empty" style="padding:48px 20px">Loading your quote list…</div>`;
  const L=cartLines(),oos=L.filter(x=>x.p.stock==='out').length;
  const back=`<button class="back" data-go="order">${ic('left')}Back to products</button>`;
- if(!L.length)return `<div>${back}<div class="panel empty" style="padding:40px 20px"><p>Your cart is empty.</p></div></div>`;
+ if(!L.length)return `<div>${back}<div class="panel empty" style="padding:40px 20px"><p>Your quote list is empty.</p></div></div>`;
  const tomorrow=new Date(Date.now()+864e5).toISOString().slice(0,10);
- return `<div>${back}<div class="pagehead"><div><h1>Checkout</h1><p class="muted">Tell us where and when to deliver. Our sales team creates your SO and confirms price and delivery.</p></div></div></div>
+ return `<div>${back}<div class="pagehead"><div><h1>Request details</h1><p class="muted">Tell us where and when to deliver. Our sales team sends you the price and delivery date, and makes your sales order (SO) once you agree.</p></div></div></div>
  <div class="grid-side checkout">
   <form class="panel panel-b form" id="orderform" novalidate>
    <h2>Delivery</h2>
@@ -741,12 +741,12 @@ function checkoutView(){
    ${addrPicker()}
    <label class="f" for="o-date">Requested delivery date<input class="inp" id="o-date" type="date" min="${tomorrow}"></label>
    <label class="f" for="o-notes">Notes for our team<textarea class="inp" id="o-notes" maxlength="1000" placeholder="Unloading hours, contact on site, special color or spec"></textarea></label>
-   <p class="note">Your agreed prices are applied when our sales team creates the SO.</p>
+   <p class="note">Prices are not shown here: our sales team sends you a quote.</p>
    ${oos?oosNote(oos):''}
    <p class="send-err" id="o-err" role="alert" hidden></p>
-   <button class="btn btn-primary" type="submit" data-busy="Sending…">Send order request</button>
+   <button class="btn btn-primary" type="submit" data-busy="Sending…">Send quote request</button>
   </form>
-  <aside class="panel summary"><div class="panel-b form"><div class="sum-h"><h2>Your order</h2><button class="link" data-act="cart">Edit cart</button></div>
+  <aside class="panel summary"><div class="panel-b form"><div class="sum-h"><h2>Your request</h2><button class="link" data-act="cart">Edit quote list</button></div>
    <div class="lines">${L.map(x=>lineHtml(x,false)).join('')}</div>${totalsHtml(L)}</div></aside>
  </div>`;
 }
@@ -754,8 +754,8 @@ function sentView(){
  const c=S.contact||{};
  return `<section class="panel" style="max-width:560px;margin:24px auto 0"><div class="panel-b" style="display:grid;gap:14px;text-align:center;justify-items:center;padding:36px 24px">
   <span style="color:var(--good)">${ic('check').replace('class="i"','class="i drawn" style="width:48px;height:48px"')}</span>
-  <h1>Order request sent</h1>
-  <p class="muted">Your reference is <b class="mono" style="color:var(--ink)">${esc(S.sent.ref)}</b> · ${rolls(S.sent.rolls)}.<br>Our sales team will contact you to confirm price and delivery. You can follow this request under My orders, also before the sales order is made.</p>
+  <h1>Quote request sent</h1>
+  <p class="muted">Your reference is <b class="mono" style="color:var(--ink)">${esc(S.sent.ref)}</b> · ${rolls(S.sent.rolls)}.<br>Our sales team will send you the price and delivery date. Once you agree, they make your sales order (SO). You can follow this request under My orders.</p>
   <p class="note">Questions? Email ${contactLinks(c)} and mention ${esc(S.sent.ref)}.</p>
   <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${S.sent.id?`<button class="btn btn-primary" data-open-req="${S.sent.id}">Track this request</button>`:''}<button class="btn btn-line" data-go="orders">View my orders</button><button class="btn btn-line" data-act="new">Start another order</button></div>
  </div></section>`;
@@ -820,10 +820,10 @@ async function ordersView(){
  return `<div class="pagehead"><div><h1>My orders</h1><p class="muted">Order Received → Order Processed → Shipped → Delivered. Delivered orders move to Past orders. Tap an order to see its shipments.</p></div></div>
  <input class="inp search" id="oq" type="search" placeholder="Find an SO, SJ, PO or product" aria-label="Find an order" style="max-width:420px">
  <p class="empty panel" id="onone" hidden>No order matches that number.</p>
- ${waiting.length?sec('Requests waiting for a sales order',waiting,reqRow,''):''}
+ ${waiting.length?sec('Quote requests waiting for a sales order',waiting,reqRow,''):''}
  ${sec('In progress',onway,orderRow,'Nothing in progress right now.')}
  ${done.length?fold('Past orders',done.length,done.map(orderRow).join(''),'past'):''}
- ${d.requests.length>waiting.length?fold('Earlier requests',d.requests.length-waiting.length,d.requests.filter(r=>!waiting.includes(r)).map(reqRow).join(''),'reqs'):''}`;
+ ${d.requests.length>waiting.length?fold('Earlier quote requests',d.requests.length-waiting.length,d.requests.filter(r=>!waiting.includes(r)).map(reqRow).join(''),'reqs'):''}`;
 }
 // One delivery note (SJ) = one shipment, tracked on its own: Prepared -> Shipped -> Delivered.
 function shipCard(x,i,n){
@@ -848,7 +848,7 @@ async function detailView(no){
  const when=[o.history.received,fromReq?o.request.handled_at:o.history.processed,o.history.shipped,o.history.delivered];
  S.again={from:o.no,items:o.lines};
  return `<div><button class="back" data-go="orders">${ic('left')}My orders</button>
-  <div class="pagehead"><div><h1>${esc(o.no)}</h1><p class="muted">Ordered ${dt(o.date)} · ${rolls(o.rolls)} · ${num(o.meters)} m${o.request?` · From your request <b class="mono">${esc(o.request.ref)}</b>`:''}</p></div><div class="head-acts">${pill(fromReq?'Order Processed':o.status)}<button class="btn btn-line btn-sm" data-act="again">${ic('cart')}Order again</button></div></div></div>
+  <div class="pagehead"><div><h1>${esc(o.no)}</h1><p class="muted">Ordered ${dt(o.date)} · ${rolls(o.rolls)} · ${num(o.meters)} m${o.request?` · From your request <b class="mono">${esc(o.request.ref)}</b>`:''}</p></div><div class="head-acts">${pill(fromReq?'Order Processed':o.status)}<button class="btn btn-line btn-sm" data-act="again">${ic('cart')}Request again</button></div></div></div>
  <section class="panel"><div class="panel-b"><ol class="timeline t4">${STEPS.map((t,i)=>part&&i===3?`<li class="part now" style="--i:3"><span class="d"></span><b>Partly delivered</b><span>${got} of ${rolls(o.rolls)}${when[3]?' · '+dt(when[3]):''}</span></li>`:`<li class="${i<=idx?'done':''} ${i===idx&&!part?'now':''}" style="--i:${i}"><span class="d"></span><b>${t}</b><span>${i<=idx&&when[i]?dt(when[i]):(i<=idx?'Done':'Pending')}</span></li>`).join('')}</ol>
   ${o.status==='Partly delivered'?`<p class="note" style="margin-top:14px">${rolls(o.rolls_to_come)} still to come on a next delivery.</p>`:''}</div></section>
  <section class="panel"><div class="panel-h"><h2>Products</h2></div><div class="tbl" style="margin-top:8px"><table>
@@ -878,9 +878,9 @@ async function requestView(id){
  const r=S.reqs.find(x=>x.id==id);if(!r){S.view='orders';render();return ''}
  if(r.status==='SO created'&&r.so_number){S.view='detail';S.detail=r.so_number;render();return ''}
  S.again={from:r.ref,items:r.data.items};
- const msg=r.status==='SO created'?`Your sales order <b class="mono">${esc(r.so_number)}</b> was created.`:r.status==='Cannot fulfil'?'Our team could not fulfil this request.':r.status==='Received by our team'&&r.status_by?`Your request was acknowledged by ${esc(r.status_by)}, who is making your sales order. Tracking starts once the SO is made.`:r.status==='Being processed'?'Our sales team has confirmed your request and is making your sales order. Tracking starts once the SO is made.':'Our sales team checks your request and creates your sales order. Tracking starts once the SO is made.';
+ const msg=r.status==='SO created'?`Your sales order <b class="mono">${esc(r.so_number)}</b> was created.`:r.status==='Cannot fulfil'?'Our team could not fulfil this request.':r.status==='Received by our team'&&r.status_by?`Your request was acknowledged by ${esc(r.status_by)}, who will send you the price. Tracking starts once the SO is made.`:r.status==='Being processed'?'Our sales team has confirmed your request and is preparing your quote. Tracking starts once the SO is made.':'Our sales team checks your request and sends you a quote. Tracking starts once the SO is made.';
  return `<div><button class="back" data-go="orders">${ic('left')}My orders</button>
-  <div class="pagehead"><div><h1>${esc(r.ref)}</h1><p class="muted">Sent ${dt(r.created_at)}${r.data.po?' · Your PO '+esc(r.data.po):''}</p></div><div class="head-acts">${pill(r.status)}<button class="btn btn-line btn-sm" data-act="again">${ic('cart')}Order again</button></div></div></div>
+  <div class="pagehead"><div><h1>${esc(r.ref)}</h1><p class="muted">Sent ${dt(r.created_at)}${r.data.po?' · Your PO '+esc(r.data.po):''}</p></div><div class="head-acts">${pill(r.status)}<button class="btn btn-line btn-sm" data-act="again">${ic('cart')}Request again</button></div></div></div>
  ${reqRail(r)}
  <div class="alert" style="background:var(--${r.status==='Cannot fulfil'?'bad':r.status==='SO created'?'good':'warn'}-soft)"><span>${msg}${r.staff_note?' '+esc(r.staff_note):''}</span>${r.status==='SO created'&&r.so_number?`<button class="btn btn-line" data-open-order="${esc(r.so_number)}">Track ${esc(r.so_number)}</button>`:''}</div>
  <section class="panel"><div class="tbl"><table><thead><tr><th>Product</th><th class="r">Rolls</th><th class="r">Meters</th></tr></thead>
@@ -910,7 +910,7 @@ function redraw(sel,html,fallback){
  box.innerHTML=html();
  if(key||fallback){const x=box.querySelector(key||fallback)||(fallback&&box.querySelector(fallback));if(x&&(key||a===document.body))x.focus({preventScroll:true})}
 }
-// Order again: the products of the order on screen go into the cart with the same rolls (added to what is there).
+// Request again: the products of the order on screen go into the cart with the same rolls (added to what is there).
 // Products the customer can no longer order (inactive, or a custom article for someone else) are named, not added.
 async function orderAgain(){
  const a=S.again;if(!a)return;
@@ -918,9 +918,9 @@ async function orderAgain(){
  const ok=[],gone=[];
  for(const it of a.items){const k=it.art+'|'+it.color;if(prodOf(k)){S.cart[k]=Math.min(999,(S.cart[k]||0)+(+it.rolls||0));ok.push(it)}else gone.push(it)}
  const note=gone.length?` Not available any more: ${gone.map(i=>i.name+' '+i.color_name).join(', ')}.`:'';
- if(!ok.length){toast(`None of the products of ${a.from} can be ordered now.`+note);return}
+ if(!ok.length){toast(`None of the products of ${a.from} can be requested now.`+note);return}
  saveCart();S.view='order';window.scrollTo(0,0);await render();openCart();
- toast(`Added ${ok.length} product${ok.length===1?'':'s'} of ${a.from} to your cart.`+note);
+ toast(`Added ${ok.length} product${ok.length===1?'':'s'} of ${a.from} to your quote list.`+note);
 }
 function openCart(){$('#cart-body').innerHTML=cartHtml();const d=$('#cart');if(!d.open)d.showModal()}
 async function boot(){
@@ -933,8 +933,8 @@ document.addEventListener('submit',async e=>{
  e.preventDefault();const f=e.target,btn=f.querySelector('button[type=submit]');
  if(f.dataset.buy){ // Add to cart / Update cart on a product card: the typed number replaces what is in the cart
   const k=f.dataset.buy,p=prodOf(k),v=f.elements.rolls.value.trim(),had=S.cart[k]||0;
-  if(v===''||+v<1){if(had){delete S.cart[k];saveCart();syncCart();toast(`Removed ${p.name} ${p.color_name} from your cart.`)}else{f.elements.rolls.focus();toast('Type how many rolls you need first.')}return}
-  setQty(k,v);syncCart();toast(`${had?'Cart updated':'Added to cart'}: ${rolls(S.cart[k])} of ${p.name} ${p.color_name}.`);return}
+  if(v===''||+v<1){if(had){delete S.cart[k];saveCart();syncCart();toast(`Removed ${p.name} ${p.color_name} from your quote list.`)}else{f.elements.rolls.focus();toast('Type how many rolls you need first.')}return}
+  setQty(k,v);syncCart();toast(`${had?'Quote list updated':'Added to quote list'}: ${rolls(S.cart[k])} of ${p.name} ${p.color_name}.`);return}
  const err=(id,m)=>{const p=$(id);if(p){p.textContent=m;p.hidden=!m}};
  const label=btn&&btn.textContent;
  if(btn){btn.disabled=true;if(btn.dataset.busy)btn.textContent=btn.dataset.busy}
@@ -951,7 +951,7 @@ document.addEventListener('submit',async e=>{
  }catch(ex){
   // the error stays next to the button that failed (kept until the next try), the order and typed details stay as they were
   const id={login:'#l-err',pwform:'#p-err',orderform:'#o-err'}[f.id];
-  const msg=f.id==='orderform'?'Your order request was not sent. '+ex.message:ex.message;
+  const msg=f.id==='orderform'?'Your quote request was not sent. '+ex.message:ex.message;
   if(id&&$(id))err(id,msg);else toast(msg);
  }finally{if(btn){btn.disabled=false;btn.textContent=label}}
 });

@@ -1,13 +1,13 @@
 # WAU customer portal
 
 Customer portal for Wahyu Agung Utama, self-hosted on the office Windows Server next to wau-erp.
-Customers sign in at **https://portal.wautama.com** to send order requests: they pick rolls from the product list (with stock), add PO, delivery address, date and notes, and send. Nothing else is shown to them.
+Customers sign in at **https://portal.wautama.com** to request a quote: they pick rolls from the product list (with stock), add PO, delivery address, date and notes, and send. No prices are shown; the salesperson sends the price and makes the SO once the customer agrees. Customers also follow their requests and orders. The portal is in Bahasa Indonesia by default, with an English switch (wording in `public/index.html`, `ID` and `ID_RX`).
 Staff manage requests, custom articles and customer logins in **WAU ERP, Sales › Customer portal** (https://erp.wautama.com/erp.php#portal), signed in with their WAU ERP account; customer logins are for WAU ERP administrators. https://portal.wautama.com/staff/ sends them there (moved 27 Oct 2026; the old staff passwords in config.php, `staff_users`, are no longer used).
 
 - Reads `si_wa` live, **read only**. Logins and requests are saved in `wau_erp` (tables `portal_*`).
 - Each request gets a reference (REQ-0001). Staff see it in WAU ERP (Home › Portal orders, Sales › Customer portal), create the SO in the main system and link it.
 - **Request becomes its SO**: the salesperson types the request number in the SO's note in the main system (exactly *REQ-0007*, with the dash). The portal then lists that SO in its place ("from REQ-0007"; opening the request opens the SO), shows it as Order Processed until its first surat jalan, and wau-erp's Home drops the request. Typing the SO number on the staff page links them too.
-- Statuses of an order request: *Sent* (no status yet) → *Received by our team*, shown to the customer as **Acknowledged by <salesperson>** (set by the **Confirm** button in WAU ERP) → *SO created* (SO linked) or *Cannot fulfil*. The request page shows them on the order progress bar: Order Received (with who acknowledged it), Order Processed once the SO is linked. *Being processed* still exists for the staff screen but no longer lights Order Processed.
+- Statuses of a quote request: *Sent* (no status yet) → *Received by our team*, shown to the customer as **Acknowledged by <salesperson>** (set by the **Confirm** button in WAU ERP) → *SO created* (SO linked) or *Cannot fulfil*. The request page shows them on the order progress bar: Order Received (with who acknowledged it), Order Processed once the SO is linked. *Being processed* still exists for the staff screen but no longer lights Order Processed.
 - Reached from the internet only through the Cloudflare Tunnel; Apache serves it on 127.0.0.1:8081.
 
 ## Folders
