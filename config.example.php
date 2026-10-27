@@ -10,11 +10,9 @@ return array(
   'db_name'     => 'si_wa',
   'erp_db'      => 'wau_erp',
 
-  // ---- Staff who may sign in at portal.wautama.com/staff/ : name => password hash ----
-  // Make a hash with:  C:\xampp\php\php.exe -r "echo password_hash('their-password', PASSWORD_DEFAULT);"
-  'staff_users' => array(
-    // 'nathan' => '$2y$10$PASTE-THE-HASH-HERE',
-  ),
+  // ---- Staff side: Sales › Customer portal in WAU ERP (sign in with the WAU ERP account) ----
+  // portal.wautama.com/staff/ sends staff there. 'staff_users' is no longer used.
+  'erp_staff_url' => 'https://erp.wautama.com/erp.php#portal',
 
   // ---- What customers see ----
   'ignore_warehouses' => array('GU001'),
