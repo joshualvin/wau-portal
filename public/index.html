@@ -121,6 +121,8 @@ svg.i{width:20px;height:20px;flex-shrink:0;fill:none;stroke:currentColor;stroke-
 .head-acts{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:.86rem;margin-bottom:10px}
 .back:hover{color:var(--ink)}
+.login-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.langbtn{font-family:var(--mono);font-size:.78rem;letter-spacing:.06em}
 a.back{text-decoration:none;justify-self:start;padding-block:12px;margin-block:-12px -16px} /* 44px tap area, same spacing */
 
 .tabbar{display:none}
@@ -452,8 +454,114 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=n=>Number(n||0).toLocaleString('id-ID',{maximumFractionDigits:1});
 const rolls=n=>n+(n===1?' roll':' rolls');
-const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const dt=v=>{if(!v)return '';const [y,m,d]=String(v).slice(0,10).split('-');return `${+d} ${MON[+m-1]} ${y}`};
+/* ---------------- language: Bahasa Indonesia by default, English on request ----------------
+   The screens are written in English; with Indonesian on, a pass over the page swaps each English phrase for its
+   Indonesian one (texts, placeholders, labels), also on parts drawn later and on messages from the server.
+   To change a word, edit ID or ID_RX. Wording to be checked by WAU staff. */
+let LANG=(()=>{try{return localStorage.getItem('wau.lang')||'id'}catch(_){return 'id'}})();
+const ID={
+ 'WAU Order Portal':'Portal Pesanan WAU','CUSTOMER PORTAL':'PORTAL PELANGGAN','WELCOME':'SELAMAT DATANG','CHANGE PASSWORD':'GANTI KATA SANDI',
+ 'Back to wautama.com':'Kembali ke wautama.com','Sign in':'Masuk','Sign out':'Keluar','Signing in…':'Sedang masuk…',
+ 'Send your order requests for SIMNU synthetic leather.':'Kirim permintaan pesanan kulit sintetis SIMNU.',
+ 'Email or username':'Email atau nama pengguna','Password':'Kata sandi',
+ 'Accounts are created by our sales team. Need access or forgot your password? Email':'Akun dibuat oleh tim penjualan kami. Butuh akses atau lupa kata sandi? Email',
+ 'or call':'atau telepon','and mention':'dan sebutkan','Questions? Email':'Ada pertanyaan? Email',
+ 'Choose your password':'Buat kata sandi Anda','Change password':'Ganti kata sandi',
+ 'You signed in with a temporary password. Choose your own to continue.':'Anda masuk dengan kata sandi sementara. Buat kata sandi sendiri untuk melanjutkan.',
+ 'Use at least 8 characters with letters and numbers.':'Minimal 8 karakter, berisi huruf dan angka.',
+ 'Temporary password':'Kata sandi sementara','Current password':'Kata sandi saat ini','New password':'Kata sandi baru','Repeat new password':'Ulangi kata sandi baru',
+ 'Save password':'Simpan kata sandi','Saving…':'Menyimpan…','Cancel':'Batal','Password saved.':'Kata sandi tersimpan.',
+ 'The two new passwords are not the same.':'Kedua kata sandi baru tidak sama.',
+ 'Pages':'Halaman','New order':'Pesanan baru','My orders':'Pesanan saya','Cart':'Keranjang',
+ 'New order request':'Permintaan pesanan baru',
+ 'Pick a color, type the rolls and add them to your cart. Our sales team confirms price and delivery.':'Pilih warna, ketik jumlah rol, lalu masukkan ke keranjang. Tim penjualan kami akan mengonfirmasi harga dan pengiriman.',
+ 'In stock only':'Hanya yang tersedia','Search article, color or code':'Cari artikel, warna, atau kode','Search products':'Cari produk',
+ 'In stock':'Tersedia','Out of stock':'Stok habis','Add to cart':'Tambahkan','Update cart':'Perbarui','rolls':'rol',
+ 'No products match your search.':'Tidak ada produk yang cocok.','Loading products…':'Memuat produk…','Loading your cart…':'Memuat keranjang Anda…',
+ 'Loading your orders…':'Memuat pesanan Anda…','Try again':'Coba lagi','Portal unavailable':'Portal tidak tersedia',
+ 'Your cart':'Keranjang Anda','Close cart':'Tutup keranjang','Checkout':'Checkout','Keep shopping':'Lanjut belanja','View cart':'Lihat keranjang','in your cart':'di keranjang',
+ 'Your cart is empty.':'Keranjang Anda kosong.','Pick a color on a product, type the rolls and press Add to cart.':'Pilih warna pada produk, ketik jumlah rol, lalu tekan Tambahkan.',
+ 'Your agreed prices are applied when our sales team creates the SO.':'Harga yang sudah disepakati berlaku saat tim penjualan kami membuat SO.',
+ 'Type how many rolls you need first.':'Ketik dulu jumlah rol yang Anda butuhkan.',
+ 'Back to products':'Kembali ke produk','Delivery':'Pengiriman','Your PO number':'Nomor PO Anda','Optional':'Opsional',
+ 'Tell us where and when to deliver. Our sales team creates your SO and confirms price and delivery.':'Beri tahu kami ke mana dan kapan barang dikirim. Tim penjualan kami membuat SO dan mengonfirmasi harga serta pengiriman.',
+ 'Deliver to':'Kirim ke','Address on file':'Alamat terdaftar','Used before':'Pernah dipakai','Another address':'Alamat lain',
+ 'Another delivery address':'Alamat pengiriman lain','Street, city, contact on site':'Jalan, kota, kontak di lokasi',
+ 'Requested delivery date':'Tanggal kirim yang diminta','Notes for our team':'Catatan untuk tim kami',
+ 'Unloading hours, contact on site, special color or spec':'Jam bongkar, kontak di lokasi, warna atau spesifikasi khusus',
+ 'Send order request':'Kirim permintaan pesanan','Sending…':'Mengirim…','Your order':'Pesanan Anda','Edit cart':'Ubah keranjang',
+ 'Order request sent':'Permintaan pesanan terkirim','Your reference is':'Nomor referensi Anda','Start another order':'Buat pesanan lain',
+ 'View my orders':'Lihat pesanan saya','Track this request':'Lacak permintaan ini','Order again':'Pesan lagi',
+ 'Our sales team will contact you to confirm price and delivery. You can follow this request under My orders, also before the sales order is made.':'Tim penjualan kami akan menghubungi Anda untuk mengonfirmasi harga dan pengiriman. Anda bisa memantau permintaan ini di Pesanan saya, juga sebelum SO dibuat.',
+ 'Order Received → Order Processed → Shipped → Delivered. Delivered orders move to Past orders. Tap an order to see its shipments.':'Pesanan diterima → Pesanan diproses → Dikirim → Sudah sampai. Pesanan yang sudah sampai pindah ke Pesanan selesai. Ketuk pesanan untuk melihat pengirimannya.',
+ 'Find an SO, SJ, PO or product':'Cari SO, SJ, PO, atau produk','Find an order':'Cari pesanan','No order matches that number.':'Tidak ada pesanan dengan nomor itu.',
+ 'Requests waiting for a sales order':'Permintaan menunggu SO','In progress':'Sedang berjalan','Nothing in progress right now.':'Belum ada pesanan yang berjalan.',
+ 'Past orders':'Pesanan selesai','Earlier requests':'Permintaan sebelumnya',
+ 'Products':'Produk','Product':'Produk','Rolls':'Rol','Meters':'Meter','Shipments':'Pengiriman','Wanted by':'Diminta tanggal','Notes':'Catatan',
+ 'Prepared':'Disiapkan','Done':'Selesai','Pending':'Menunggu',
+ 'Order Received':'Pesanan diterima','Order Processed':'Pesanan diproses','Shipped':'Dikirim','Delivered':'Sudah sampai','Partly delivered':'Sebagian sampai',
+ 'Being prepared':'Sedang disiapkan','Sent':'Terkirim','Received by our team':'Diterima tim kami','Being processed':'Sedang diproses',
+ 'SO created':'SO dibuat','Cannot fulfil':'Tidak dapat dipenuhi','Acknowledged':'Dikonfirmasi',
+ 'Our sales team checks your request and creates your sales order. Tracking starts once the SO is made.':'Tim penjualan kami memeriksa permintaan Anda dan membuat SO. Pelacakan dimulai setelah SO dibuat.',
+ 'Our sales team has confirmed your request and is making your sales order. Tracking starts once the SO is made.':'Tim penjualan kami telah mengonfirmasi permintaan Anda dan sedang membuat SO. Pelacakan dimulai setelah SO dibuat.',
+ 'Our team could not fulfil this request.':'Tim kami tidak dapat memenuhi permintaan ini.',
+ 'We have your order. A delivery note (SJ) is made when your rolls are prepared; it shows here with its own tracking.':'Pesanan Anda sudah kami terima. Surat jalan (SJ) dibuat saat rol Anda disiapkan; SJ akan muncul di sini dengan pelacakannya sendiri.',
+ 'Cannot reach the portal. Check your internet connection and try again.':'Portal tidak dapat dihubungi. Periksa koneksi internet Anda lalu coba lagi.',
+ 'Please sign in again.':'Silakan masuk lagi.','Something went wrong.':'Terjadi kesalahan.',
+ // messages from the server (public/api/portal.php, app/lib.php)
+ 'Add at least one product.':'Tambahkan minimal satu produk.','An order can have up to 50 products.':'Satu pesanan maksimal 50 produk.',
+ 'Choose a password different from the current one.':'Pilih kata sandi yang berbeda dari yang sekarang.',
+ 'Enter your email or username, and your password.':'Masukkan email atau nama pengguna, dan kata sandi Anda.',
+ 'One of the products is not available. Reload the page and try again.':'Salah satu produk tidak tersedia. Muat ulang halaman lalu coba lagi.',
+ 'Order not found.':'Pesanan tidak ditemukan.','Please choose a new password first.':'Silakan buat kata sandi baru terlebih dahulu.','Please sign in.':'Silakan masuk.',
+ 'That login and password do not match an active account.':'Login dan kata sandi tidak cocok dengan akun yang aktif.',
+ 'The portal is not available right now. Please try again later.':'Portal sedang tidak tersedia. Silakan coba lagi nanti.',
+ 'Too many wrong passwords. Wait 15 minutes, or contact our sales team.':'Terlalu banyak kata sandi salah. Tunggu 15 menit, atau hubungi tim penjualan kami.',
+ 'Your current password is not correct.':'Kata sandi saat ini salah.','Your session expired. Reload the page and try again.':'Sesi Anda berakhir. Muat ulang halaman lalu coba lagi.',
+ 'The portal had a problem loading this page. Please try again in a minute, or contact our sales team.':'Portal mengalami masalah saat memuat halaman ini. Coba lagi sebentar lagi, atau hubungi tim penjualan kami.',
+ 'Use at least 8 characters.':'Minimal 8 karakter.','Use both letters and numbers.':'Gunakan huruf dan angka.'
+};
+// Sentences with numbers or names in them; applied in this order, then the plain roll counts.
+const ID_RX=[
+ [/^(\d+) colors? (?:is|are) out of stock\. You can still request (?:it|them); our sales team confirms whether we can supply (?:it|them) and when\.$/,'$1 warna stoknya habis. Anda tetap bisa memintanya; tim penjualan kami akan mengonfirmasi apakah dan kapan warna tersebut bisa kami sediakan.'],
+ [/^Your order request was not sent\. (.*)$/,(m,rest)=>'Permintaan pesanan Anda belum terkirim. '+tr(rest)],
+ [/^Added to cart: (.+) of (.+)\.$/,'Masuk keranjang: $1 $2.'],[/^Cart updated: (.+) of (.+)\.$/,'Keranjang diperbarui: $1 $2.'],
+ [/^Removed (.+) from your cart\.$/,'$1 dihapus dari keranjang.'],
+ [/^Added (\d+) products? of (.+?) to your cart\./,'$1 produk dari $2 masuk ke keranjang.'],[/ Not available any more: (.+)\.$/,' Sudah tidak tersedia: $1.'],
+ [/^None of the products of (.+) can be ordered now\./,'Tidak ada produk dari $1 yang bisa dipesan sekarang.'],
+ [/^Your request was acknowledged by (.+), who is making your sales order\. Tracking starts once the SO is made\.$/,'Permintaan Anda telah dikonfirmasi oleh $1, yang sedang membuat SO Anda. Pelacakan dimulai setelah SO dibuat.'],
+ [/^Acknowledged by (.+?)( · |$)/,'Dikonfirmasi oleh $1$2'],[/^Track (.+)$/,'Lacak $1'],
+ [/^(\d+) rolls? of this article in your cart$/,'$1 rol artikel ini ada di keranjang'],[/^Cart, (\d+) products?$/,'Keranjang, $1 produk'],
+ [/^Remove (.+)$/,'Hapus $1'],[/^Rolls of (.+)$/,'Jumlah rol $1'],[/^Color of (.+)$/,'Warna $1'],[/, out of stock/,', stok habis'],[/, (\d+) rolls? in cart/,', $1 rol di keranjang'],
+ [/^Ordered /,'Dipesan '],[/From your request/,'Dari permintaan Anda'],[/^Sent (\d)/,'Dikirim $1'],[/Your PO /,'PO Anda '],
+ [/^Shipment (\d+) of (\d+)$/,'Pengiriman $1 dari $2'],[/^Shipment (\d+)$/,'Pengiriman $1'],[/· (\d+) delivery notes?/,'· $1 surat jalan'],
+ [/(\d+) rolls? still to come on a next delivery\./,'$1 rol lagi menyusul di pengiriman berikutnya.'],
+ [/(\d+) rolls? not on a delivery note yet\. They will come on a next shipment\./,'$1 rol belum masuk surat jalan. Rol tersebut menyusul di pengiriman berikutnya.'],
+ [/(\d+) of (\d+) rolls?\b/g,'$1 dari $2 rol'],[/\b(\d+) rolls?\b/g,'$1 rol'],[/m\/roll/g,'m/rol']
+];
+function tr(s){
+ if(LANG!=='id'||!s)return s;
+ const k=s.trim();if(Object.prototype.hasOwnProperty.call(ID,k))return s.replace(k,ID[k]);
+ let o=s;for(const [re,r] of ID_RX)o=o.replace(re,r);return o;
+}
+const TR_ATTR=['placeholder','aria-label','title','data-busy'];
+function translate(root){
+ if(LANG!=='id')return;
+ if(root.nodeType===3){const t=tr(root.nodeValue);if(t!==root.nodeValue)root.nodeValue=t;return}
+ if(root.nodeType!==1||root.closest('.notr,script,style'))return;
+ const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
+ while((n=w.nextNode()))if(!n.parentNode.closest('.notr')){const t=tr(n.nodeValue);if(t!==n.nodeValue)n.nodeValue=t}
+ [root,...root.querySelectorAll('[placeholder],[aria-label],[title],[data-busy]')].forEach(el=>{if(el.closest('.notr'))return;
+  for(const a of TR_ATTR){const v=el.getAttribute(a);if(v){const t=tr(v);if(t!==v)el.setAttribute(a,t)}}});
+}
+// Anything drawn later (product grid, cart, messages, errors) is translated as it appears.
+new MutationObserver(ms=>{if(LANG!=='id')return;for(const m of ms){
+ if(m.type==='attributes')translate(m.target);else m.addedNodes.forEach(translate)}})
+ .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:TR_ATTR});
+document.documentElement.lang=LANG;
+const langBtn=()=>`<button class="btn btn-ghost notr langbtn" data-act="lang" aria-label="${LANG==='id'?'Switch to English':'Ganti ke Bahasa Indonesia'}">${LANG==='id'?'EN':'ID'}</button>`;
+const MON={en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],id:['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']};
+const dt=v=>{if(!v)return '';const [y,m,d]=String(v).slice(0,10).split('-');return `${+d} ${MON[LANG==='id'?'id':'en'][+m-1]} ${y}`};
 const STEPS=['Order Received','Order Processed','Shipped','Delivered'];
 const PILL={'Order Received':'p-neutral','Order Processed':'p-info','Shipped':'p-accent','Delivered':'p-good','Partly delivered':'p-warn',
  'Being prepared':'p-info','Sent':'p-warn','Received by our team':'p-info','Acknowledged':'p-info','Being processed':'p-info','SO created':'p-good','Cannot fulfil':'p-bad'};
@@ -486,7 +594,7 @@ const bump=el=>{if(!el)return;el.classList.remove('bump');void el.offsetWidth;el
 const brand=sub=>`<div class="brandrow"><span class="mark">WAU</span><span><b>Wahyu Agung Utama</b><small>${sub}</small></span></div>`;
 function loginView(){
  const c=S.contact||{};
- return `<div class="login"><div class="login-card"><a class="back" href="https://wautama.com">${ic('left')}Back to wautama.com</a>${brand('CUSTOMER PORTAL')}
+ return `<div class="login"><div class="login-card"><div class="login-top"><a class="back" href="https://wautama.com">${ic('left')}Back to wautama.com</a>${langBtn()}</div>${brand('CUSTOMER PORTAL')}
   <div><h1>Sign in</h1><p class="muted" style="margin-top:6px">Send your order requests for SIMNU synthetic leather.</p></div>
   <form id="login" class="form" novalidate>
    <label class="f" for="l-email">Email or username<input class="inp" id="l-email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
@@ -520,6 +628,7 @@ function shell(inner){
   <header class="top">
    <div class="brandrow"><span class="mark">WAU</span><span><b style="font-size:.95rem">${esc(S.me.company)}</b><small>${esc(S.me.name||S.me.email)}</small></span></div>
    <div style="display:flex;gap:6px;align-items:center">
+    ${langBtn()}
     <button class="btn btn-ghost cartbtn" data-act="cart" aria-haspopup="dialog" aria-label="${cartLabel()}">${ic('cart')}<span class="hide-xs">Cart</span><span class="dot"${cartLines().length?'':' hidden'}>${cartLines().length}</span></button>
     <button class="btn btn-ghost" data-act="password" title="Change password" aria-label="Change password">${ic('key')}<span class="hide-xs">Password</span></button>
     <button class="btn btn-ghost" data-act="logout" title="Sign out" aria-label="Sign out">${ic('out')}<span class="hide-xs">Sign out</span></button>
@@ -658,7 +767,7 @@ async function render(){await draw();settle()}
 // Not on the first load, and not when the same screen is only redrawn.
 function settle(){
  const h=$('#root h1'),key=S.me?[S.view,S.detail,S.reqId,h&&h.textContent].join('|'):'signin';
- document.title=(h?h.textContent+' · ':'')+'WAU Order Portal';
+ document.title=(h?h.textContent+' · ':'')+tr('WAU Order Portal');
  if(h&&settle.last!==undefined&&key!==settle.last){h.tabIndex=-1;h.focus({preventScroll:true})}
  settle.last=key;
 }
@@ -879,6 +988,7 @@ document.addEventListener('click',async e=>{
  if(d.openReq){S.view='request';S.reqId=d.openReq;window.scrollTo(0,0);render();return}
  if(d.act==='reload'){S.products=null;render();return}
  if(d.act==='stockonly'){S.stockOnly=!S.stockOnly;b.setAttribute('aria-pressed',S.stockOnly);redraw('#plist',shopCards);return}
+ if(d.act==='lang'){LANG=LANG==='id'?'en':'id';try{localStorage.setItem('wau.lang',LANG)}catch(_){}document.documentElement.lang=LANG;settle.last=undefined;render();return}
  if(d.act==='cart'){openCart();return}
  if(d.act==='again'){orderAgain();return}
  if(d.act==='closecart'){$('#cart').close();return}
