@@ -15,7 +15,7 @@ body{margin:0}[hidden]{display:none!important}
 :root{
   --bg:#F6F6F4; --surface:#FFFFFF; --ink:#121314; --muted:#62656A; --line:#E4E4E1;
   --side:#18191B; --side-ink:#F4F4F2; --side-muted:#A3A6AB;
-  --accent:#C2622D; --accent-soft:#F7E9DF; --on-accent:#FFFFFF;
+  --accent:#C2622D; --accent-soft:#F7E9DF; --on-accent:#FFFFFF; --brand:var(--accent);
   --good:#1F7A4D; --good-soft:#E3F2EA; --warn:#9A6400; --warn-soft:#FBF0D9; --bad:#B42318; --bad-soft:#FBE7E5; --info:#2E5AAC; --info-soft:#E6EDFA;
   --display:"Geist","Helvetica Neue",Arial,system-ui,sans-serif;
   --mono:"Geist Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -62,6 +62,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .btn-line{background:var(--surface);border-color:var(--line);color:var(--ink)}
 .btn-line:hover{border-color:var(--ink)}
 .btn-ghost{background:transparent;color:var(--muted);padding:8px 10px}
+.top .btn{min-height:44px;min-width:44px} /* finger-sized header buttons */
 .btn-ghost:hover{color:var(--ink)}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
 .link{background:none;border:0;padding:0;color:var(--accent);font-weight:600;cursor:pointer;text-decoration:none}
@@ -77,6 +78,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .brandrow small{font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;color:var(--muted)}
 label.f{display:grid;gap:6px;font-size:.82rem;font-weight:500;color:var(--muted)}
 .inp{width:100%;padding:11px 13px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:.93rem}
+::placeholder{color:var(--muted);opacity:1}
 .inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)}
 .inp[readonly]{color:var(--muted)}
 textarea.inp{min-height:96px;resize:vertical}
@@ -447,12 +449,17 @@ const dt=v=>{if(!v)return '';const [y,m,d]=String(v).slice(0,10).split('-');retu
 const STEPS=['Order Received','Order Processed','Shipped','Delivered'];
 const PILL={'Order Received':'p-neutral','Order Processed':'p-info','Shipped':'p-accent','Delivered':'p-good','Partly delivered':'p-warn',
  'Being prepared':'p-info','Sent':'p-warn','Received by our team':'p-info','Acknowledged':'p-info','Being processed':'p-info','SO created':'p-good','Cannot fulfil':'p-bad'};
+const telHref=v=>{const d=String(v||'').replace(/[^0-9+]/g,'');return 'tel:'+(d.startsWith('0')?'+62'+d.slice(1):d)}; // (031) 843 7377 -> tel:+62318437377
+const contactLinks=c=>`<a class="link" href="mailto:${esc(c.email)}">${esc(c.email)}</a> or call <a class="link" href="${esc(telHref(c.phone))}">${esc(c.phone)}</a>`;
 const pill=t=>{if(t==='Received by our team')t='Acknowledged';return `<span class="pill ${PILL[t]||'p-neutral'}">${esc(t)}</span>`};
 const stockPill=p=>p.stock==='in'?`<span class="pill p-good">In stock</span>`:`<span class="pill p-neutral">Out of stock</span>`;
 
 const S={me:null,csrf:'',view:'order',products:null,cart:{},q:'',stockOnly:false,sent:null,sel:{}};
-try{S.cart=JSON.parse(localStorage.getItem('wau.cart')||'{}')||{}}catch(_){S.cart={}}
-const saveCart=()=>{try{localStorage.setItem('wau.cart',JSON.stringify(S.cart))}catch(_){}};
+// The cart is saved per login, so on a shared PC one buyer never sees another's cart; sign-out clears it.
+const cartKey=()=>'wau.cart.'+(S.me?S.me.email:'');
+function loadCart(){try{localStorage.removeItem('wau.cart');S.cart=S.me&&JSON.parse(localStorage.getItem(cartKey())||'{}')||{}}catch(_){S.cart={}}}
+const saveCart=()=>{try{if(S.me)localStorage.setItem(cartKey(),JSON.stringify(S.cart))}catch(_){}};
+function clearCart(){try{localStorage.removeItem(cartKey())}catch(_){}S.cart={}}
 
 async function api(a,body){
  const opt=body?{method:'POST',headers:{'Content-Type':'application/json','X-CSRF':S.csrf},body:JSON.stringify(body),credentials:'same-origin'}:{credentials:'same-origin'};
@@ -479,7 +486,7 @@ function loginView(){
    <p class="note" id="l-err" style="color:var(--bad)" hidden></p>
    <button class="btn btn-primary" type="submit" data-busy="Signing in…">Sign in</button>
   </form>
-  <p class="note">Accounts are created by our sales team. Need access or forgot your password? Email <b>${esc(c.email)}</b> or call <b>${esc(c.phone)}</b>.</p>
+  <p class="note">Accounts are created by our sales team. Need access or forgot your password? Email ${contactLinks(c)}.</p>
  </div></div>`;
 }
 function passwordView(first){
@@ -622,7 +629,7 @@ function sentView(){
   <span style="color:var(--good)">${ic('check').replace('class="i"','class="i drawn" style="width:48px;height:48px"')}</span>
   <h1>Order request sent</h1>
   <p class="muted">Your reference is <b class="mono" style="color:var(--ink)">${esc(S.sent.ref)}</b> · ${rolls(S.sent.rolls)}.<br>Our sales team will contact you to confirm price and delivery. You can follow this request under My orders, also before the sales order is made.</p>
-  <p class="note">Questions? Email ${esc(c.email)} or call ${esc(c.phone)} and mention ${esc(S.sent.ref)}.</p>
+  <p class="note">Questions? Email ${contactLinks(c)} and mention ${esc(S.sent.ref)}.</p>
   <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">${S.sent.id?`<button class="btn btn-primary" data-open-req="${S.sent.id}">Track this request</button>`:''}<button class="btn btn-line" data-go="orders">View my orders</button><button class="btn btn-line" data-act="new">Start another order</button></div>
  </div></section>`;
 }
@@ -714,7 +721,7 @@ async function detailView(no){
   ${o.sjs.length?`<div class="ships">${o.sjs.map((x,i)=>shipCard(x,i,o.sjs.length)).join('')}</div>`
    :'<p class="muted" style="margin-top:10px">We have your order. A delivery note (SJ) is made when your rolls are prepared; it shows here with its own tracking.</p>'}
   ${o.rolls_to_come>0&&o.sjs.length?`<p class="note" style="margin-top:14px">${rolls(o.rolls_to_come)} not on a delivery note yet. They will come on a next shipment.</p>`:''}
-  <p class="note" style="margin-top:14px">Questions? Email ${esc(S.contact.email)} or call ${esc(S.contact.phone)} and mention ${esc(o.no)}.</p>
+  <p class="note" style="margin-top:14px">Questions? Email ${contactLinks(S.contact)} and mention ${esc(o.no)}.</p>
  </div></section>`;
 }
 // A request on the same rail as an order: Order Received when it is sent ("Acknowledged by <name>" once a salesperson
@@ -764,7 +771,7 @@ function redraw(sel,html,fallback){
 }
 function openCart(){$('#cart-body').innerHTML=cartHtml();const d=$('#cart');if(!d.open)d.showModal()}
 async function boot(){
- try{const m=await api('me');S.me=m.user;S.contact=m.contact}catch(e){$('#root').innerHTML=`<div class="login"><div class="login-card"><h1>Portal unavailable</h1><p class="muted">${esc(e.message)}</p></div></div>`;return}
+ try{const m=await api('me');S.me=m.user;S.contact=m.contact;loadCart()}catch(e){$('#root').innerHTML=`<div class="login"><div class="login-card"><h1>Portal unavailable</h1><p class="muted">${esc(e.message)}</p></div></div>`;return}
  render();
 }
 
@@ -779,7 +786,7 @@ document.addEventListener('submit',async e=>{
  const label=btn&&btn.textContent;
  if(btn){btn.disabled=true;if(btn.dataset.busy)btn.textContent=btn.dataset.busy}
  try{
-  if(f.id==='login'){err('#l-err','');await api('login',{email:$('#l-email').value,password:$('#l-pass').value});const m=await api('me');S.me=m.user;S.view='order';S.products=null;render();return}
+  if(f.id==='login'){err('#l-err','');await api('login',{email:$('#l-email').value,password:$('#l-pass').value});const m=await api('me');S.me=m.user;loadCart();S.view='order';S.products=null;render();return}
   if(f.id==='pwform'){
    err('#p-err','');if($('#p-new').value!==$('#p-new2').value)throw new Error('The two new passwords are not the same.');
    await api('password',{current:$('#p-cur').value,new:$('#p-new').value});S.me.must_change=0;S.view='order';toast('Password saved.');render();return}
@@ -819,7 +826,7 @@ document.addEventListener('toggle',e=>{const k=e.target.dataset&&e.target.datase
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.qty){e.preventDefault();e.target.blur()}});
 document.addEventListener('click',async e=>{
  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
- if(d.act==='logout'){try{await api('logout',{})}catch(_){}S.me=null;S.products=null;S.view='order';render();return}
+ if(d.act==='logout'){try{await api('logout',{})}catch(_){}clearCart();S.me=null;S.products=null;S.view='order';render();return}
  if(d.act==='password'){S.view='password';render();return}
  if(d.act==='back'||d.act==='new'){S.view='order';render();return}
  if(d.go){S.view=d.go;window.scrollTo(0,0);render();return}
