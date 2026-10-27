@@ -3,3 +3,5 @@ config.php
 *.log
 .DS_Store
 Thumbs.db
+# Local design-tool output (reports and caches hold local paths)
+.impeccable/
