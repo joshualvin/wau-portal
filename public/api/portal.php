@@ -181,6 +181,24 @@ case 'password':
   session_regenerate_id(true);
   out(array('ok' => true));
 
+case 'account':
+  // The customer's own account page: who they are, what staff set for them, and the latest sign-in attempts on their login.
+  $u = need_user();
+  $st = db()->prepare('SELECT created_at, last_login FROM ' . E('portal_users') . ' WHERE id = ?'); $st->execute(array((int)$u['id'])); $row = $st->fetch();
+  $st = db()->prepare('SELECT at, ok FROM ' . E('portal_attempts') . ' WHERE login = ? AND area = ? ORDER BY at DESC LIMIT 8');
+  $st->execute(array($u['email'], 'customer')); $activity = array();
+  foreach ($st->fetchAll() as $a) $activity[] = array('at' => $a['at'], 'ok' => (int)$a['ok']);
+  out(array('ok' => true, 'account' => array('name' => $u['name'], 'login' => $u['email'], 'company' => $u['company'], 'customer' => $u['customer'],
+    'terms' => (int)$u['terms'], 'address' => customer_address($u['customer']), 'since' => $row ? $row['created_at'] : null, 'activity' => $activity)));
+
+case 'profile':
+  if (!$post) bad('POST only', 405);
+  $u = need_user();
+  $name = trim(preg_replace('/\s+/', ' ', isset($in['name']) ? (string)$in['name'] : ''));
+  if ($name === '' || strlen($name) > 200) bad('Enter your name (up to 200 characters).');
+  db()->prepare('UPDATE ' . E('portal_users') . ' SET name = ? WHERE id = ?')->execute(array($name, (int)$u['id']));
+  out(array('ok' => true, 'name' => $name));
+
 case 'products':
   $u = need_user();
   out(array('ok' => true, 'products' => array_values(catalog_for($u['customer']))));

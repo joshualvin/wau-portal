@@ -119,6 +119,12 @@ svg.i{width:20px;height:20px;flex-shrink:0;fill:none;stroke:currentColor;stroke-
 .opt:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,transparent)}
 .opt input{margin-top:3px;accent-color:var(--accent)}
 .opt span{min-width:0}.opt b{display:block;font-size:.86rem;font-weight:600}.opt small{display:block;color:var(--muted);font-size:.84rem;overflow-wrap:anywhere}
+.acct{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:16px;align-items:start}
+.acct-col{display:grid;gap:16px;min-width:0}
+.acct .kv{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.acts{list-style:none;margin:12px 0 0;padding:0;display:grid}
+.acts li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line);font-size:.88rem}
+.acts li:first-child{border-top:0}
 .head-acts{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:.86rem;margin-bottom:10px}
 .back:hover{color:var(--ink)}
@@ -454,6 +460,7 @@ const I={
  cart:'<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3.5h2.6l2.4 12h11.3l2-8.5H6.2"/>',
  out:'<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/>',
  key:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.2 3.6-6.5 8-6.5s8 2.3 8 6.5"/>',
  x:'<path d="M6 6l12 12M18 6L6 18"/>',
  check:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 10"/>'
 };
@@ -533,7 +540,14 @@ const ID={
  'Too many wrong passwords. Wait 15 minutes, or contact our sales team.':'Terlalu banyak kata sandi salah. Tunggu 15 menit, atau hubungi tim penjualan kami.',
  'Your current password is not correct.':'Kata sandi saat ini salah.','Your session expired. Reload the page and try again.':'Sesi Anda berakhir. Muat ulang halaman lalu coba lagi.',
  'The portal had a problem loading this page. Please try again in a minute, or contact our sales team.':'Portal mengalami masalah saat memuat halaman ini. Coba lagi sebentar lagi, atau hubungi tim penjualan kami.',
- 'Use at least 8 characters.':'Minimal 8 karakter.','Use both letters and numbers.':'Gunakan huruf dan angka.'
+ 'Use at least 8 characters.':'Minimal 8 karakter.','Use both letters and numbers.':'Gunakan huruf dan angka.',
+ 'Enter your name (up to 200 characters).':'Isi nama Anda (maksimal 200 karakter).',
+ // account page
+ 'Account':'Akun','Profile':'Profil','Your name':'Nama Anda','Save name':'Simpan nama','Name saved.':'Nama tersimpan.',
+ 'Sign-in':'Login','Company':'Perusahaan','Customer code':'Kode pelanggan','Payment terms':'Termin pembayaran','Account since':'Akun dibuat',
+ 'To change your sign-in, company details or address on file, email':'Untuk mengubah login, data perusahaan, atau alamat terdaftar, email',
+ 'Language':'Bahasa','Recent sign-ins':'Riwayat masuk','Signed in':'Berhasil masuk','Wrong password':'Kata sandi salah','No sign-ins yet.':'Belum ada riwayat masuk.',
+ 'If you do not recognise one, change your password and tell our sales team.':'Jika ada yang tidak Anda kenali, ganti kata sandi dan beri tahu tim penjualan kami.'
 };
 // Sentences with numbers or names in them; applied in this order, then the plain roll counts.
 const ID_RX=[
@@ -552,7 +566,7 @@ const ID_RX=[
  [/^Shipment (\d+) of (\d+)$/,'Pengiriman $1 dari $2'],[/^Shipment (\d+)$/,'Pengiriman $1'],[/· (\d+) delivery notes?/,'· $1 surat jalan'],
  [/(\d+) rolls? still to come on a next delivery\./,'$1 rol lagi menyusul di pengiriman berikutnya.'],
  [/(\d+) rolls? not on a delivery note yet\. They will come on a next shipment\./,'$1 rol belum masuk surat jalan. Rol tersebut menyusul di pengiriman berikutnya.'],
- [/(\d+) of (\d+) rolls?\b/g,'$1 dari $2 rol'],[/\b(\d+) rolls?\b/g,'$1 rol'],[/m\/roll/g,'m/rol']
+ [/(\d+) of (\d+) rolls?\b/g,'$1 dari $2 rol'],[/\b(\d+) rolls?\b/g,'$1 rol'],[/m\/roll/g,'m/rol'],[/^(\d+) days$/,'$1 hari']
 ];
 function tr(s){
  if(LANG!=='id'||!s)return s;
@@ -645,7 +659,7 @@ function shell(inner){
    <div style="display:flex;gap:6px;align-items:center">
     ${langBtn()}
     <button class="btn btn-ghost cartbtn" data-act="cart" aria-haspopup="dialog" aria-label="${cartLabel()}">${ic('cart')}<span class="hide-xs">Quote list</span><span class="dot"${cartLines().length?'':' hidden'}>${cartLines().length}</span></button>
-    <button class="btn btn-ghost" data-act="password" title="Change password" aria-label="Change password">${ic('key')}<span class="hide-xs">Password</span></button>
+    <button class="btn btn-ghost" data-go="account" title="Account" aria-label="Account"${S.view==='account'?' aria-current="page"':''}>${ic('user')}<span class="hide-xs">Account</span></button>
     <button class="btn btn-ghost" data-act="logout" title="Sign out" aria-label="Sign out">${ic('out')}<span class="hide-xs">Sign out</span></button>
    </div>
   </header>
@@ -795,10 +809,10 @@ async function draw(){
  if(!S.me){root.innerHTML=loginView();return}
  if(S.me.must_change){root.innerHTML=passwordView(true);return}
  if(S.view==='password'){root.innerHTML=passwordView(false);return}
- if(['orders','detail','request'].includes(S.view)){
+ if(['orders','detail','request','account'].includes(S.view)){
   root.innerHTML=shell(`<div class="panel empty" style="padding:48px 20px">Loading your orders…</div>`);
   const v=S.view;
-  try{const html=v==='orders'?await ordersView():v==='detail'?await detailView(S.detail):await requestView(S.reqId);if(S.view===v)$('#content').innerHTML=html}
+  try{const html=v==='account'?await accountView():v==='orders'?await ordersView():v==='detail'?await detailView(S.detail):await requestView(S.reqId);if(S.view===v)$('#content').innerHTML=html}
   catch(e){$('#content').innerHTML=`<div class="panel empty" style="padding:40px 20px"><p>${esc(e.message)}</p><p style="margin-top:12px"><button class="btn btn-line" data-go="${v==='orders'?'orders':'orders'}">Try again</button></p></div>`}
   return;
  }
@@ -854,6 +868,41 @@ function shipCard(x,i,n){
   <ol class="timeline t3">${steps.map(([t,d],j)=>`<li class="${j<=k?'done':''} ${j===k?'now':''}" style="--i:${j}"><span class="d"></span><b>${t}</b><span>${d?dt(d):(j<=k?'Done':'Pending')}</span></li>`).join('')}</ol>
   ${(x.lines||[]).length?`<ul class="ship-l">${x.lines.map(l=>`<li><span>${esc(l.name)} ${esc(l.color_name)} <span class="mono muted">${esc(l.art)}·${esc(l.color)}</span></span><span>${rolls(l.rolls)}${l.meters?' · '+num(l.meters)+' m':''}</span></li>`).join('')}</ul>`:''}
  </article>`;
+}
+/* ---------------- account ---------------- */
+// The customer's own account: name (editable), what our staff set (sign-in, company, terms, address), password, language,
+// and the latest sign-in attempts on this login so a stranger's use shows up.
+async function accountView(){
+ const a=(await api('account')).account;
+ const at=v=>v?`${dt(v)} ${String(v).slice(11,16)}`:'';
+ const acts=a.activity.map(x=>`<li><span class="num">${at(x.at)}</span>${x.ok?'<span class="pill p-good">Signed in</span>':'<span class="pill p-warn">Wrong password</span>'}</li>`).join('');
+ return `<div class="pagehead"><div><h1>Account</h1><p class="muted">${esc(a.company)} · <span class="mono">${esc(a.customer)}</span></p></div></div>
+ <div class="acct">
+  <section class="panel"><div class="panel-b form"><h2>Profile</h2>
+   <form id="profileform" class="form" novalidate>
+    <label class="f" for="a-name">Your name<input class="inp" id="a-name" maxlength="200" autocomplete="name" value="${esc(a.name)}"></label>
+    <p class="send-err" id="a-err" role="alert" hidden></p>
+    <button class="btn btn-line" type="submit" data-busy="Saving…">Save name</button>
+   </form>
+   <dl class="kv"><dt>Sign-in</dt><dd class="mono">${esc(a.login)}</dd><dt>Company</dt><dd>${esc(a.company)}</dd><dt>Customer code</dt><dd class="mono">${esc(a.customer)}</dd>${a.terms?`<dt>Payment terms</dt><dd>${a.terms} days</dd>`:''}${a.address?`<dt>Address on file</dt><dd>${esc(a.address)}</dd>`:''}${a.since?`<dt>Account since</dt><dd>${dt(a.since)}</dd>`:''}</dl>
+   <p class="note">To change your sign-in, company details or address on file, email ${contactLinks(S.contact)}.</p>
+  </div></section>
+  <div class="acct-col">
+   <section class="panel"><div class="panel-b"><h2>Change password</h2><p class="note" style="margin:6px 0 12px">Use at least 8 characters with letters and numbers.</p>
+    <form id="pwform" class="form" novalidate>
+     <label class="f" for="p-cur">Current password<input class="inp" id="p-cur" type="password" autocomplete="current-password" required></label>
+     <label class="f" for="p-new">New password<input class="inp" id="p-new" type="password" autocomplete="new-password" required></label>
+     <label class="f" for="p-new2">Repeat new password<input class="inp" id="p-new2" type="password" autocomplete="new-password" required></label>
+     <p class="send-err" id="p-err" role="alert" hidden></p>
+     <button class="btn btn-primary" type="submit" data-busy="Saving…">Save password</button>
+    </form></div></section>
+   <section class="panel"><div class="panel-b"><h2>Language</h2>
+    <div class="filters notr" style="margin-top:12px"><button class="chip" data-setlang="id" aria-pressed="${LANG==='id'}">Bahasa Indonesia</button><button class="chip" data-setlang="en" aria-pressed="${LANG==='en'}">English</button></div></div></section>
+   <section class="panel"><div class="panel-b"><h2>Recent sign-ins</h2><p class="note" style="margin-top:6px">If you do not recognise one, change your password and tell our sales team.</p>
+    ${acts?`<ul class="acts">${acts}</ul>`:'<p class="muted" style="margin-top:10px">No sign-ins yet.</p>'}
+    <button class="btn btn-line" data-act="logout" style="margin-top:16px">${ic('out')}Sign out</button></div></section>
+  </div>
+ </div>`;
 }
 async function detailView(no){
  const o=(await api('order&no='+encodeURIComponent(no))).order;
@@ -977,9 +1026,10 @@ document.addEventListener('submit',async e=>{
  if(btn){btn.disabled=true;if(btn.dataset.busy)btn.textContent=btn.dataset.busy}
  try{
   if(f.id==='login'){err('#l-err','');await api('login',{email:$('#l-email').value,password:$('#l-pass').value});const m=await api('me');S.me=m.user;loadCart();S.view='order';S.products=null;render();return}
+  if(f.id==='profileform'){err('#a-err','');const r=await api('profile',{name:$('#a-name').value});S.me.name=r.name;toast('Name saved.');render();return}
   if(f.id==='pwform'){
    err('#p-err','');if($('#p-new').value!==$('#p-new2').value)throw new Error('The two new passwords are not the same.');
-   await api('password',{current:$('#p-cur').value,new:$('#p-new').value});S.me.must_change=0;S.view='order';toast('Password saved.');render();return}
+   await api('password',{current:$('#p-cur').value,new:$('#p-new').value});S.me.must_change=0;S.view=S.view==='account'?'account':'order';toast('Password saved.');render();return}
   if(f.id==='orderform'){
    err('#o-err','');
    const items=Object.keys(S.cart).map(k=>{const [art,color]=k.split('|');return {art,color,rolls:S.cart[k]}});
@@ -987,7 +1037,7 @@ document.addEventListener('submit',async e=>{
    S.sent={id:r.id,ref:r.ref,rolls:cartRolls(),revised:!!r.revised};setRevise(null);S.reqs=null;S.addresses=null;S.cart={};saveCart();S.view='sent';render();window.scrollTo(0,0);return}
  }catch(ex){
   // the error stays next to the button that failed (kept until the next try), the order and typed details stay as they were
-  const id={login:'#l-err',pwform:'#p-err',orderform:'#o-err'}[f.id];
+  const id={login:'#l-err',pwform:'#p-err',orderform:'#o-err',profileform:'#a-err'}[f.id];
   const msg=f.id==='orderform'?'Your quote request was not sent. '+ex.message:ex.message;
   if(id&&$(id))err(id,msg);else toast(msg);
  }finally{if(btn){btn.disabled=false;btn.textContent=label}}
@@ -1027,7 +1077,7 @@ document.addEventListener('click',async e=>{
  if(d.openReq){S.view='request';S.reqId=d.openReq;window.scrollTo(0,0);render();return}
  if(d.act==='reload'){S.products=null;render();return}
  if(d.act==='stockonly'){S.stockOnly=!S.stockOnly;b.setAttribute('aria-pressed',S.stockOnly);redraw('#plist',shopCards);return}
- if(d.act==='lang'){LANG=LANG==='id'?'en':'id';try{localStorage.setItem('wau.lang',LANG)}catch(_){}document.documentElement.lang=LANG;settle.last=undefined;render();return}
+ if(d.act==='lang'||d.setlang){LANG=d.setlang||(LANG==='id'?'en':'id');try{localStorage.setItem('wau.lang',LANG)}catch(_){}document.documentElement.lang=LANG;settle.last=undefined;render();return}
  if(d.act==='cart'){openCart();return}
  if(d.act==='again'){orderAgain();return}
  if(d.act==='revise'){reviseRequest();return}
