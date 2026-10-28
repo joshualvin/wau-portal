@@ -191,6 +191,7 @@ a.back{text-decoration:none;justify-self:start;padding-block:12px;margin-block:-
 /* filters */
 .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:.84rem;font-weight:500;cursor:pointer;color:var(--muted)}
+.chip{white-space:nowrap}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .search{flex:1 1 220px;max-width:320px;margin-left:auto}
 @media (max-width:640px){.search{max-width:none;margin-left:0}}
@@ -296,6 +297,12 @@ button[disabled]{opacity:.55;cursor:wait}
 .qty input::-webkit-outer-spin-button,.qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .qty input:focus{outline:2px solid var(--brand);outline-offset:0;border-color:transparent}
 .lq{display:inline-flex;align-items:center;gap:4px}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:10px;background:var(--bg);overflow:hidden}
+.stepper:focus-within{outline:2px solid var(--brand);outline-offset:0}
+.qty .stepper input{width:44px;height:38px;border:0;border-radius:0;background:transparent;outline:none}
+.stp{width:32px;height:38px;border:0;padding:0;background:none;color:var(--ink);font-size:1.15rem;line-height:1;cursor:pointer}
+.stp:hover{background:var(--line)}
+@media (pointer:coarse){.stp{width:40px;height:44px}.qty .stepper input{height:44px}} /* finger-sized on touch screens */
 .line .pill{margin-top:6px}
 .oos,.send-err{font-size:.86rem;padding:10px 12px;border-radius:var(--r-sm);color:var(--ink)}
 .oos{background:var(--warn-soft)}
@@ -354,9 +361,9 @@ details.older[open]>summary{padding-bottom:0}
 .dot-c:focus-visible{outline:2px solid var(--accent);outline-offset:0}
 .pcolor{font-size:.86rem;display:flex;justify-content:space-between;align-items:center;gap:4px 8px;flex-wrap:wrap}
 @media (pointer:coarse){.dot-c{width:40px;height:40px}} /* finger-sized swatches on touch screens */
-.buy{display:flex;gap:8px;align-items:center;align-self:end}
-.buy .btn{flex:1;min-height:38px;padding-inline:12px}
-.buy .qty input{width:58px}
+.buy{display:flex;flex-wrap:wrap;gap:8px;align-items:center;align-self:end}
+.buy .btn{flex:1 1 96px;min-height:38px;padding-inline:12px}
+
 .incart{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--good);font-weight:600;margin-top:-2px}
 .incart svg{width:16px;height:16px}
 .mini{width:32px;height:32px;border-radius:8px;flex:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 15%,transparent)}
@@ -483,7 +490,7 @@ const ID={
  'Request a price quote':'Minta penawaran harga',
  'Pick a color, type the rolls and add them to your quote list. Our sales team sends you the price and delivery date.':'Pilih warna, ketik jumlah rol, lalu masukkan ke daftar penawaran. Tim penjualan kami akan mengirimkan harga dan tanggal kirim.',
  'In stock only':'Hanya yang tersedia','Search article, color or code':'Cari artikel, warna, atau kode','Search products':'Cari produk',
- 'In stock':'Tersedia','Out of stock':'Stok habis','Add to quote':'Tambahkan','Update quote':'Perbarui','rolls':'rol',
+ 'In stock':'Tersedia','Out of stock':'Stok habis','Add to quote':'Tambahkan','Update quote':'Perbarui','One roll fewer':'Kurangi satu rol','One roll more':'Tambah satu rol','rolls':'rol',
  'No products match your search.':'Tidak ada produk yang cocok.','Loading products…':'Memuat produk…','Loading your quote list…':'Memuat daftar penawaran Anda…',
  'Loading your orders…':'Memuat pesanan Anda…','Try again':'Coba lagi','Portal unavailable':'Portal tidak tersedia',
  'Your quote list':'Daftar penawaran Anda','Close quote list':'Tutup daftar','Continue':'Lanjutkan','Request details':'Detail permintaan','Add more products':'Tambah produk lain','View quote list':'Lihat daftar','in your quote list':'di daftar penawaran',
@@ -700,15 +707,17 @@ function card(g){
    <div class="sw" role="radiogroup" aria-label="Color of ${esc(g.name)}">${g.colors.map(c=>{const h=hueOf(c.color_name),inc=S.cart[c.art+'|'+c.color];
     return `<button type="button" role="radio" aria-checked="${c.color===p.color}" class="dot-c${h?'':' plain'}${c.stock==='out'?' oos':''}${inc?' inc':''}" ${tint(h)} data-pick="${esc(c.art+'|'+c.color)}" title="${esc(c.color_name)}" aria-label="${esc(c.color_name)}${c.stock==='out'?', out of stock':''}${inc?', '+rolls(inc)+' in quote list':''}"></button>`}).join('')}</div>
    <p class="pcolor"><span><b>${esc(p.color_name)}</b> <span class="mono muted">${esc(p.color)}</span>${p.roll_m?`<span class="muted"> · ${num(p.roll_m)} m/roll</span>`:''}</span>${stockPill(p)}</p>
-   <form class="buy" data-buy="${esc(k)}" novalidate><label class="qty"><input type="number" inputmode="numeric" min="1" max="999" step="1" placeholder="0" value="${n||''}" name="rolls" aria-label="Rolls of ${esc(g.name+' '+p.color_name)}"><span>rolls</span></label>
+   <form class="buy" data-buy="${esc(k)}" novalidate><span class="qty">${stepper(`<input type="number" inputmode="numeric" min="1" max="999" step="1" placeholder="0" value="${n||''}" name="rolls" aria-label="Rolls of ${esc(g.name+' '+p.color_name)}">`,'card:'+k)}<span>rolls</span></span>
     <button class="btn ${n?'btn-line':'btn-primary'} btn-sm" type="submit">${n?'Update quote':'Add to quote'}</button></form>
    ${inCart?`<p class="incart">${ic('cart')}${rolls(inCart)} of this article in your quote list</p>`:''}
   </div></article>`;
 }
 // The customer types how many rolls they want of each color.
 function qtyInput(k,n,label){
- return `<label class="qty"><input type="number" inputmode="numeric" min="0" max="999" step="1" placeholder="0" value="${n||''}" data-qty="${esc(k)}" aria-label="${esc(label)}"><span>rolls</span></label>`;
+ return `<span class="qty">${stepper(`<input type="number" inputmode="numeric" min="0" max="999" step="1" placeholder="0" value="${n||''}" data-qty="${esc(k)}" aria-label="${esc(label)}">`,k)}<span>rolls</span></span>`;
 }
+// − and + around a rolls box: one roll per press, from 0 to 999; the box still takes typing.
+const stepper=(input,k)=>`<span class="stepper"><button type="button" class="stp" data-step="-1" data-for="${esc(k)}" aria-label="One roll fewer">−</button>${input}<button type="button" class="stp" data-step="1" data-for="${esc(k)}" aria-label="One roll more">+</button></span>`;
 const oosNote=n=>`<p class="oos">${n===1?'1 color is':n+' colors are'} out of stock. You can still request ${n===1?'it':'them'}; our sales team confirms whether we can supply ${n===1?'it':'them'} and when.</p>`;
 const totalsHtml=L=>`<div class="totals"><div class="grand"><span>${rolls(L.reduce((a,x)=>a+x.r,0))}</span><span>${num(L.reduce((a,x)=>a+x.m,0))} m</span></div></div>`;
 function lineHtml(x,edit){
@@ -917,7 +926,7 @@ function syncCart(){ // header count, phone cart bar, product cards, open cart a
 // Redraw a region and put focus back on the same control (a swatch, a rolls box, a button), or on a fallback.
 function redraw(sel,html,fallback){
  const box=$(sel),a=document.activeElement,card=a&&box.contains(a)&&a.closest('[data-card]');
- const key=!a||!box.contains(a)?null:a.dataset.pick?`[data-pick="${CSS.escape(a.dataset.pick)}"]`:a.dataset.qty?`[data-qty="${CSS.escape(a.dataset.qty)}"]`
+ const key=!a||!box.contains(a)?null:a.dataset.step?`[data-step="${a.dataset.step}"][data-for="${CSS.escape(a.dataset.for)}"]`:a.dataset.pick?`[data-pick="${CSS.escape(a.dataset.pick)}"]`:a.dataset.qty?`[data-qty="${CSS.escape(a.dataset.qty)}"]`
   :card?`[data-card="${CSS.escape(card.dataset.card)}"] ${a.name==='rolls'?'input':'button[type=submit]'}`:a.dataset.act?`[data-act="${a.dataset.act}"]`:null;
  box.innerHTML=html();
  if(key||fallback){const x=box.querySelector(key||fallback)||(fallback&&box.querySelector(fallback));if(x&&(key||a===document.body))x.focus({preventScroll:true})}
@@ -1008,6 +1017,8 @@ document.addEventListener('toggle',e=>{const k=e.target.dataset&&e.target.datase
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.qty){e.preventDefault();e.target.blur()}});
 document.addEventListener('click',async e=>{
  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+ if(d.step){const inp=b.parentNode.querySelector('input'),n=Math.max(0,Math.min(999,(parseInt(inp.value,10)||0)+(+d.step)));
+  inp.value=n||'';inp.dispatchEvent(new Event('input',{bubbles:true}));if(inp.dataset.qty)inp.dispatchEvent(new Event('change',{bubbles:true}));return}
  if(d.act==='logout'){try{await api('logout',{})}catch(_){}clearCart();S.addresses=null;S.me=null;S.products=null;S.view='order';render();return}
  if(d.act==='password'){S.view='password';render();return}
  if(d.act==='back'||d.act==='new'){S.view='order';render();return}
