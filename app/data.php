@@ -269,7 +269,10 @@ function product_by_name($a, $b) { return strcasecmp($a['name'] . ' ' . $a['colo
 
 // A driver's reason for Not delivered, in words for the customer (never the driver's own note).
 function attempt_reason($code) {
-  $w = array('closed' => 'Nobody was there to receive it', 'address' => 'We could not find the address', 'refused' => 'The delivery was not accepted', 'later' => 'Rescheduled');
+  $w = array('closed' => 'The place was closed', 'nobody' => 'Nobody was there to receive it', 'address' => 'We could not find the address',
+    'access' => 'Our truck could not reach the address', 'unload' => 'There was no one to unload or no space for the goods', 'asked' => 'Rescheduled at your request',
+    'refused' => 'The delivery was not accepted', 'payment' => 'Payment or documents were not ready', 'ours' => 'Delayed on our side; we will come back',
+    'later' => 'Rescheduled');   // later: reports from older versions of the drivers' app
   return isset($w[$code]) ? $w[$code] : 'Could not be delivered';
 }
 // "Received by: Budi" / "Diterima oleh: Budi" (the driver's app writes it in the phone's language) -> "Budi"; any other note is ours, not shown.
