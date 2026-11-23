@@ -69,7 +69,7 @@ function order_detail($o) {
   $d = order_summary($o); $d['history'] = $o['history'];
   $d['lines'] = array(); foreach ($o['lines'] as $l) $d['lines'][] = array('art' => $l['art'], 'color' => $l['color'], 'name' => $l['name'],
     'color_name' => $l['color_name'], 'rolls' => $l['rolls'], 'meters' => $l['meters'], 'on_sj' => $l['on_sj']);
-  $d['sjs'] = array(); foreach ($o['sjs'] as $s) $d['sjs'][] = array('sj' => $s['sj'], 'date' => $s['date'], 'shipped_date' => $s['shipped_date'], 'out_since' => isset($s['out_since']) ? $s['out_since'] : null, 'attempts' => isset($s['attempts']) ? $s['attempts'] : array(), 'pod' => isset($s['pod']) ? $s['pod'] : array(),
+  $d['sjs'] = array(); foreach ($o['sjs'] as $s) $d['sjs'][] = array('sj' => $s['sj'], 'date' => $s['date'], 'shipped_date' => $s['shipped_date'], 'out_since' => isset($s['out_since']) ? $s['out_since'] : null, 'near' => !empty($s['near']) ? 1 : 0, 'attempts' => isset($s['attempts']) ? $s['attempts'] : array(), 'pod' => isset($s['pod']) ? $s['pod'] : array(),
     'delivered' => $s['delivered'], 'delivered_date' => $s['delivered_date'], 'rolls' => $s['rolls'], 'meters' => $s['meters'],
     'lines' => array_map(function ($l) { return array('art' => $l['art'], 'color' => $l['color'], 'name' => $l['name'], 'color_name' => $l['color_name'], 'rolls' => $l['rolls'], 'meters' => $l['meters']); }, $s['lines']));
   return $d;

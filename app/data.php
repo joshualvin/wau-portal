@@ -106,7 +106,7 @@ function customer_data($code) {
         GROUP BY h.nosj, h.tgl, h.delivery, h.tgldelivery, h.nofk, h.lunas, j.noso, j.kodebarang, j.kodewarna', $part) as $r) {
       $no = tr($r[0]); $so = tr($r[6]);
       if (!isset($sj[$no])) $sj[$no] = array('date' => d10($r[1]), 'delivered' => (int)$r[2] ? 1 : 0, 'delivered_date' => d10($r[3]), 'invoice' => tr($r[4]),
-        'settled' => (int)$r[5] ? 1 : 0, 'shipped_date' => null, 'out_since' => null, 'attempts' => array(), 'pod' => array(), 'by_so' => array(), 'amount' => 0.0);
+        'settled' => (int)$r[5] ? 1 : 0, 'shipped_date' => null, 'out_since' => null, 'near' => 0, 'attempts' => array(), 'pod' => array(), 'by_so' => array(), 'amount' => 0.0);
       if (!isset($sj[$no]['by_so'][$so])) $sj[$no]['by_so'][$so] = array('rolls' => 0, 'meters' => 0.0, 'lines' => array());
       $sj[$no]['by_so'][$so]['rolls'] += (int)$r[9];
       $sj[$no]['by_so'][$so]['meters'] += (float)$r[10];
@@ -130,6 +130,12 @@ function customer_data($code) {
           WHERE a.state = 'open' AND a.nosj IN (" . marks($part) . ')', $part) as $r)
         if (isset($sj[tr($r[0])]) && !$sj[tr($r[0])]['delivered']) $sj[tr($r[0])]['out_since'] = substr((string)$r[1], 0, 16);
     } catch (Exception $e) {}
+    // Arriving soon: the driver came within a few km of the customer on this trip (WAU ERP sets near_at from the driver's position;
+    // an older WAU ERP without the column: just not shown).
+    try {
+      foreach (q_rows('SELECT nosj FROM ' . E('driver_assign') . " WHERE state = 'open' AND near_at IS NOT NULL AND near_at >= NOW() - INTERVAL 6 HOUR AND nosj IN (" . marks($part) . ')', $part) as $r)
+        if (isset($sj[tr($r[0])]) && $sj[tr($r[0])]['out_since'] && !$sj[tr($r[0])]['delivered']) $sj[tr($r[0])]['near'] = 1;
+    } catch (Exception $e) {}
     // Delivery attempts (a driver's Not delivered) and proof of delivery (photos of the signed SJ).
     try {
       foreach (q_rows('SELECT nosj, at, reason FROM ' . E('driver_issues') . " WHERE kind = 'fail' AND nosj IN (" . marks($part) . ') ORDER BY at', $part) as $r)
@@ -148,7 +154,7 @@ function customer_data($code) {
     $list = array(); $open = array();
     foreach ($sj as $no => $s) if (isset($s['by_so'][$so])) {
       $item = array('sj' => $no, 'date' => $s['date'], 'delivered' => $s['delivered'], 'delivered_date' => $s['delivered_date'],
-        'shipped_date' => $s['shipped_date'], 'out_since' => $s['out_since'], 'attempts' => $s['attempts'], 'pod' => $s['pod'], 'rolls' => $s['by_so'][$so]['rolls'], 'meters' => round($s['by_so'][$so]['meters'], 2),
+        'shipped_date' => $s['shipped_date'], 'out_since' => $s['out_since'], 'near' => $s['near'], 'attempts' => $s['attempts'], 'pod' => $s['pod'], 'rolls' => $s['by_so'][$so]['rolls'], 'meters' => round($s['by_so'][$so]['meters'], 2),
         'lines' => $s['by_so'][$so]['lines']);
       $list[] = $item;
       if (!$s['delivered']) $open[] = $item;
@@ -164,9 +170,9 @@ function customer_data($code) {
     }
     if (!$list) { $status = 'Order Received'; $when = $o['date']; }
     elseif ($open) {
-      $on_trip = false; $out = null; foreach ($open as $item) { if ($item['shipped_date']) $on_trip = true; if ($item['out_since'] && (!$out || $item['out_since'] < $out)) $out = $item['out_since']; }
+      $on_trip = false; $out = null; $near = false; foreach ($open as $item) { if ($item['shipped_date']) $on_trip = true; if ($item['out_since'] && (!$out || $item['out_since'] < $out)) $out = $item['out_since']; if (!empty($item['near'])) $near = true; }
       $tried = null; foreach ($open as $item) if (!$item['out_since'] && $item['attempts']) { $a = end($item['attempts']); if (!$tried || $a['at'] > $tried) $tried = $a['at']; }
-      if ($out) { $status = 'Out for delivery'; $when = $out; if (!$hist['shipped'] || substr($out, 0, 10) < $hist['shipped']) $hist['shipped'] = substr($out, 0, 10); }
+      if ($out) { $status = $near ? 'Arriving soon' : 'Out for delivery'; $when = $out; if (!$hist['shipped'] || substr($out, 0, 10) < $hist['shipped']) $hist['shipped'] = substr($out, 0, 10); }
       elseif ($tried) { $status = 'Delivery attempted'; $when = $tried; }
       else { $status = $on_trip ? 'Shipped' : 'Order Processed'; $when = $on_trip ? $hist['shipped'] : $hist['processed']; }
     } elseif ($to_come > 0) { $status = 'Partly delivered'; $when = $hist['delivered']; }
