@@ -4,6 +4,9 @@
 //   no SJ yet = Order Received · SJ made = Order Processed · SJ on a delivery trip = Shipped · every SJ delivered = Delivered
 //   An SJ given to a driver in WAU ERP whose delivery run is going now (the driver pressed Start deliveries in the WAU Driver app) is
 //   Out for delivery (wau_erp.driver_assign + driver_runs); the order shows Out for delivery while one of its SJ is.
+//   A driver's Not delivered report is a delivery attempt (wau_erp.driver_issues kind fail: when, and a reason in customer words; the
+//   driver's own note is not shown); an open SJ with an attempt and not out again makes the order Delivery attempted. The photo of the
+//   signed SJ (wau_erp.sj_pod) is the proof of delivery: when, received by (from the photo's note), the photo through a=pod.
 //   (Partly delivered while rolls are still to come). Every delivered SJ is an invoice, due = delivery date + TOP.
 // Table and column names come from config.php ('tables' / 'cols').
 
@@ -103,7 +106,7 @@ function customer_data($code) {
         GROUP BY h.nosj, h.tgl, h.delivery, h.tgldelivery, h.nofk, h.lunas, j.noso, j.kodebarang, j.kodewarna', $part) as $r) {
       $no = tr($r[0]); $so = tr($r[6]);
       if (!isset($sj[$no])) $sj[$no] = array('date' => d10($r[1]), 'delivered' => (int)$r[2] ? 1 : 0, 'delivered_date' => d10($r[3]), 'invoice' => tr($r[4]),
-        'settled' => (int)$r[5] ? 1 : 0, 'shipped_date' => null, 'out_since' => null, 'by_so' => array(), 'amount' => 0.0);
+        'settled' => (int)$r[5] ? 1 : 0, 'shipped_date' => null, 'out_since' => null, 'attempts' => array(), 'pod' => array(), 'by_so' => array(), 'amount' => 0.0);
       if (!isset($sj[$no]['by_so'][$so])) $sj[$no]['by_so'][$so] = array('rolls' => 0, 'meters' => 0.0, 'lines' => array());
       $sj[$no]['by_so'][$so]['rolls'] += (int)$r[9];
       $sj[$no]['by_so'][$so]['meters'] += (float)$r[10];
@@ -127,6 +130,13 @@ function customer_data($code) {
           WHERE a.state = 'open' AND a.nosj IN (" . marks($part) . ')', $part) as $r)
         if (isset($sj[tr($r[0])]) && !$sj[tr($r[0])]['delivered']) $sj[tr($r[0])]['out_since'] = substr((string)$r[1], 0, 16);
     } catch (Exception $e) {}
+    // Delivery attempts (a driver's Not delivered) and proof of delivery (photos of the signed SJ).
+    try {
+      foreach (q_rows('SELECT nosj, at, reason FROM ' . E('driver_issues') . " WHERE kind = 'fail' AND nosj IN (" . marks($part) . ') ORDER BY at', $part) as $r)
+        if (isset($sj[tr($r[0])])) $sj[tr($r[0])]['attempts'][] = array('at' => substr((string)$r[1], 0, 16), 'reason' => attempt_reason((string)$r[2]));
+      foreach (q_rows('SELECT id, nosj, created, note FROM ' . E('sj_pod') . ' WHERE deleted = 0 AND nosj IN (' . marks($part) . ') ORDER BY created DESC', $part) as $r)
+        if (isset($sj[tr($r[1])])) $sj[tr($r[1])]['pod'][] = array('id' => (int)$r[0], 'at' => substr((string)$r[2], 0, 16), 'received_by' => pod_received_by((string)$r[3]));
+    } catch (Exception $e) {}
     // Payments allocated to each SJ.
     foreach (q_rows('SELECT ' . C('pay_sj') . ', SUM(' . C('pay_amount') . ') FROM ' . T('pay_line') . ' WHERE ' . C('pay_sj') . ' IN (' . marks($part) . ') GROUP BY ' . C('pay_sj'), $part) as $r)
       if (isset($sj[tr($r[0])])) $sj[tr($r[0])]['paid'] = (float)$r[1];
@@ -138,7 +148,7 @@ function customer_data($code) {
     $list = array(); $open = array();
     foreach ($sj as $no => $s) if (isset($s['by_so'][$so])) {
       $item = array('sj' => $no, 'date' => $s['date'], 'delivered' => $s['delivered'], 'delivered_date' => $s['delivered_date'],
-        'shipped_date' => $s['shipped_date'], 'out_since' => $s['out_since'], 'rolls' => $s['by_so'][$so]['rolls'], 'meters' => round($s['by_so'][$so]['meters'], 2),
+        'shipped_date' => $s['shipped_date'], 'out_since' => $s['out_since'], 'attempts' => $s['attempts'], 'pod' => $s['pod'], 'rolls' => $s['by_so'][$so]['rolls'], 'meters' => round($s['by_so'][$so]['meters'], 2),
         'lines' => $s['by_so'][$so]['lines']);
       $list[] = $item;
       if (!$s['delivered']) $open[] = $item;
@@ -155,7 +165,9 @@ function customer_data($code) {
     if (!$list) { $status = 'Order Received'; $when = $o['date']; }
     elseif ($open) {
       $on_trip = false; $out = null; foreach ($open as $item) { if ($item['shipped_date']) $on_trip = true; if ($item['out_since'] && (!$out || $item['out_since'] < $out)) $out = $item['out_since']; }
+      $tried = null; foreach ($open as $item) if (!$item['out_since'] && $item['attempts']) { $a = end($item['attempts']); if (!$tried || $a['at'] > $tried) $tried = $a['at']; }
       if ($out) { $status = 'Out for delivery'; $when = $out; if (!$hist['shipped'] || substr($out, 0, 10) < $hist['shipped']) $hist['shipped'] = substr($out, 0, 10); }
+      elseif ($tried) { $status = 'Delivery attempted'; $when = $tried; }
       else { $status = $on_trip ? 'Shipped' : 'Order Processed'; $when = $on_trip ? $hist['shipped'] : $hist['processed']; }
     } elseif ($to_come > 0) { $status = 'Partly delivered'; $when = $hist['delivered']; }
     else { $status = 'Delivered'; $when = $hist['delivered']; }
@@ -254,3 +266,13 @@ function catalog_for($code) {
   return $memo[$code] = $list;
 }
 function product_by_name($a, $b) { return strcasecmp($a['name'] . ' ' . $a['color_name'], $b['name'] . ' ' . $b['color_name']); }
+
+// A driver's reason for Not delivered, in words for the customer (never the driver's own note).
+function attempt_reason($code) {
+  $w = array('closed' => 'Nobody was there to receive it', 'address' => 'We could not find the address', 'refused' => 'The delivery was not accepted', 'later' => 'Rescheduled');
+  return isset($w[$code]) ? $w[$code] : 'Could not be delivered';
+}
+// "Received by: Budi" / "Diterima oleh: Budi" (the driver's app writes it in the phone's language) -> "Budi"; any other note is ours, not shown.
+function pod_received_by($note) {
+  return preg_match('/^\s*(?:received by|diterima oleh)\s*:\s*(.{1,80})/i', $note, $m) ? trim($m[1]) : '';
+}

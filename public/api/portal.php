@@ -69,7 +69,7 @@ function order_detail($o) {
   $d = order_summary($o); $d['history'] = $o['history'];
   $d['lines'] = array(); foreach ($o['lines'] as $l) $d['lines'][] = array('art' => $l['art'], 'color' => $l['color'], 'name' => $l['name'],
     'color_name' => $l['color_name'], 'rolls' => $l['rolls'], 'meters' => $l['meters'], 'on_sj' => $l['on_sj']);
-  $d['sjs'] = array(); foreach ($o['sjs'] as $s) $d['sjs'][] = array('sj' => $s['sj'], 'date' => $s['date'], 'shipped_date' => $s['shipped_date'], 'out_since' => isset($s['out_since']) ? $s['out_since'] : null,
+  $d['sjs'] = array(); foreach ($o['sjs'] as $s) $d['sjs'][] = array('sj' => $s['sj'], 'date' => $s['date'], 'shipped_date' => $s['shipped_date'], 'out_since' => isset($s['out_since']) ? $s['out_since'] : null, 'attempts' => isset($s['attempts']) ? $s['attempts'] : array(), 'pod' => isset($s['pod']) ? $s['pod'] : array(),
     'delivered' => $s['delivered'], 'delivered_date' => $s['delivered_date'], 'rolls' => $s['rolls'], 'meters' => $s['meters'],
     'lines' => array_map(function ($l) { return array('art' => $l['art'], 'color' => $l['color'], 'name' => $l['name'], 'color_name' => $l['color_name'], 'rolls' => $l['rolls'], 'meters' => $l['meters']); }, $s['lines']));
   return $d;
@@ -211,6 +211,15 @@ case 'orders':
     if (isset($reqs[$no])) $x['request_ref'] = $reqs[$no]['ref'];
     $list[] = $x; }
   out(array('ok' => true, 'orders' => $list, 'requests' => my_requests($u['customer'], $reqs)));
+
+case 'pod':   // the photo of a signed SJ (proof of delivery): only for an SJ of this customer's own orders
+  $u = need_user(); $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+  $x = q_rows('SELECT nosj, mime, photo FROM ' . E('sj_pod') . ' WHERE id = ? AND deleted = 0', array($id)); if (!$x) bad('No such photo.', 404);
+  $mine = false; foreach (customer_data($u['customer'])['orders'] as $o) foreach ($o['sjs'] as $s2) if ($s2['sj'] === tr($x[0][0])) $mine = true;
+  if (!$mine) bad('No such photo.', 404);
+  while (ob_get_level()) ob_end_clean();
+  header('Content-Type: ' . (preg_match('#^image/(jpeg|png)$#', $x[0][1]) ? $x[0][1] : 'image/jpeg')); header('Cache-Control: private, max-age=86400'); header('X-Content-Type-Options: nosniff');
+  echo base64_decode($x[0][2]); exit;
 
 case 'order':
   $u = need_user(); $d = customer_data($u['customer']);
