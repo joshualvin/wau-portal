@@ -465,6 +465,7 @@ const ID={
  'Products':'Produk','Product':'Produk','Rolls':'Rol','Meters':'Meter','Shipments':'Pengiriman','Wanted by':'Diminta tanggal','Notes':'Catatan',
  'Prepared':'Disiapkan','Done':'Selesai','Pending':'Menunggu',
  'Order Received':'Pesanan diterima','Order Processed':'Pesanan diproses','Shipped':'Dikirim','Delivered':'Sudah sampai','Partly delivered':'Sebagian sampai',
+ 'Out for delivery':'Sedang diantar','Since':'Sejak',
  'Being prepared':'Sedang disiapkan','Sent':'Terkirim','Received by our team':'Diterima tim kami','Being processed':'Sedang diproses',
  'SO created':'SO dibuat','Cannot fulfil':'Tidak dapat dipenuhi','Acknowledged':'Dikonfirmasi',
  'Our sales team checks your request and sends you a quote. Tracking starts once the SO is made.':'Tim penjualan kami memeriksa permintaan Anda dan mengirimkan penawaran harga. Pelacakan dimulai setelah SO dibuat.',
@@ -534,9 +535,11 @@ new MutationObserver(ms=>{if(LANG!=='id')return;for(const m of ms){
 document.documentElement.lang=LANG;
 const langBtn=()=>`<button class="btn btn-ghost notr langbtn" data-act="lang" aria-label="${LANG==='id'?'Switch to English':'Ganti ke Bahasa Indonesia'}">${LANG==='id'?'EN':'ID'}</button>`;
 const MON={en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],id:['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']};
+// "Since 08:15" (today) or "Since 22 Nov 2026 16:40": the word and the time are separate text, so the word is translated.
+const since=v=>{if(!v)return '';const day=String(v).slice(0,10),hm=String(v).slice(11,16),today=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);return `<span>Since</span> ${day===today?hm:dt(day)+' '+hm}`};
 const dt=v=>{if(!v)return '';const [y,m,d]=String(v).slice(0,10).split('-');return `${+d} ${MON[LANG==='id'?'id':'en'][+m-1]} ${y}`};
 const STEPS=['Order Received','Order Processed','Shipped','Delivered'];
-const PILL={'Order Received':'p-neutral','Order Processed':'p-info','Shipped':'p-accent','Delivered':'p-good','Partly delivered':'p-warn',
+const PILL={'Order Received':'p-neutral','Order Processed':'p-info','Shipped':'p-accent','Out for delivery':'p-accent','Delivered':'p-good','Partly delivered':'p-warn',
  'Being prepared':'p-info','Sent':'p-warn','Received by our team':'p-info','Acknowledged':'p-info','Being processed':'p-info','SO created':'p-good','Cannot fulfil':'p-bad','Cancelled':'p-bad'};
 const telHref=v=>{const d=String(v||'').replace(/[^0-9+]/g,'');return 'tel:'+(d.startsWith('0')?'+62'+d.slice(1):d)}; // (031) 843 7377 -> tel:+62318437377
 const contactLinks=c=>`<a class="link" href="mailto:${esc(c.email)}">${esc(c.email)}</a> or call <a class="link" href="${esc(telHref(c.phone))}">${esc(c.phone)}</a>`;
@@ -778,7 +781,7 @@ function orderRow(o){
  return `<button class="row" data-open-order="${esc(o.no)}" data-key="${esc((o.no+' '+(o.request_ref||'')+' '+sjs.join(' ')+' '+o.items).toLowerCase())}">
   <div><div class="t mono">${esc(o.no)}</div><div class="s">${dt(o.date)} · ${rolls(o.rolls)}${o.request_ref?` · from ${esc(o.request_ref)}`:''}</div>${sjs.length?`<div class="s mono sjlist">SJ ${sjs.map(esc).join(', ')}</div>`:''}</div>
   <div class="hide-sm"><div class="s">${esc(o.items)}</div></div>
-  <div class="amt hide-sm">${o.status_date&&o.status!=='Order Received'?dt(o.status_date):''}</div>
+  <div class="amt hide-sm">${o.status==='Out for delivery'?since(o.status_date):o.status_date&&o.status!=='Order Received'?dt(o.status_date):''}</div>
   <div>${pill(o.status)}</div></button>`;
 }
 function reqRow(r){
@@ -807,12 +810,12 @@ async function ordersView(){
 }
 // One delivery note (SJ) = one shipment, tracked on its own: Prepared -> Shipped -> Delivered.
 function shipCard(x,i,n){
- const st=x.delivered?'Delivered':x.shipped_date?'Shipped':'Being prepared';
- const k=x.delivered?2:x.shipped_date?1:0;
- const steps=[['Prepared',x.date],['Shipped',x.shipped_date],['Delivered',x.delivered?x.delivered_date:null]];
+ const st=x.delivered?'Delivered':x.out_since?'Out for delivery':x.shipped_date?'Shipped':'Being prepared';
+ const k=x.delivered?2:x.out_since||x.shipped_date?1:0;
+ const steps=[['Prepared',x.date],[x.out_since&&!x.delivered?'Out for delivery':'Shipped',x.shipped_date],['Delivered',x.delivered?x.delivered_date:null]];
  return `<article class="ship" id="sj-${esc(x.sj)}">
   <div class="ship-h"><div><span class="eyebrow">Shipment ${i+1}${n>1?' of '+n:''}</span><b class="mono">${esc(x.sj)}</b><small>${rolls(x.rolls)} · ${num(x.meters)} m</small></div>${pill(st)}</div>
-  <ol class="timeline t3">${steps.map(([t,d],j)=>`<li class="${j<=k?'done':''} ${j===k?'now':''}" style="--i:${j}"><span class="d"></span><b>${t}</b><span>${d?dt(d):(j<=k?'Done':'Pending')}</span></li>`).join('')}</ol>
+  <ol class="timeline t3">${steps.map(([t,d],j)=>`<li class="${j<=k?'done':''} ${j===k?'now':''}" style="--i:${j}"><span class="d"></span><b>${t}</b><span>${t==='Out for delivery'?since(x.out_since):d?dt(d):(j<=k?'Done':'Pending')}</span></li>`).join('')}</ol>
   ${(x.lines||[]).length?`<ul class="ship-l">${x.lines.map(l=>`<li><span>${esc(l.name)} ${esc(l.color_name)} <span class="mono muted">${esc(l.art)}·${esc(l.color)}</span></span><span>${rolls(l.rolls)}${l.meters?' · '+num(l.meters)+' m':''}</span></li>`).join('')}</ul>`:''}
  </article>`;
 }
@@ -859,12 +862,13 @@ async function detailView(no){
  const part=o.status!=='Delivered'&&got>0;
  // Made from a portal request our team has handled: Order Processed is reached on that day, also before the first SJ.
  const fromReq=o.request&&o.status==='Order Received';
- const idx=o.status==='Partly delivered'?2:fromReq?1:STEPS.indexOf(o.status);
+ const out=o.status==='Out for delivery';
+ const idx=o.status==='Partly delivered'||out?2:fromReq?1:STEPS.indexOf(o.status);
  const when=[o.history.received,fromReq?o.request.handled_at:o.history.processed,o.history.shipped,o.history.delivered];
  S.again={from:o.no,items:o.lines};
  return `<div><button class="back" data-go="orders">${ic('left')}My orders</button>
   <div class="pagehead"><div><h1>${esc(o.no)}</h1><p class="muted">Ordered ${dt(o.date)} · ${rolls(o.rolls)} · ${num(o.meters)} m${o.request?` · From your request <b class="mono">${esc(o.request.ref)}</b>`:''}</p></div><div class="head-acts">${pill(fromReq?'Order Processed':o.status)}<button class="btn btn-line btn-sm" data-act="again">${ic('cart')}Request again</button></div></div></div>
- <section class="panel"><div class="panel-b"><ol class="timeline t4">${STEPS.map((t,i)=>part&&i===3?`<li class="part now" style="--i:3"><span class="d"></span><b>Partly delivered</b><span>${got} of ${rolls(o.rolls)}${when[3]?' · '+dt(when[3]):''}</span></li>`:`<li class="${i<=idx?'done':''} ${i===idx&&!part?'now':''}" style="--i:${i}"><span class="d"></span><b>${t}</b><span>${i<=idx&&when[i]?dt(when[i]):(i<=idx?'Done':'Pending')}</span></li>`).join('')}</ol>
+ <section class="panel"><div class="panel-b"><ol class="timeline t4">${STEPS.map((t,i)=>part&&i===3?`<li class="part now" style="--i:3"><span class="d"></span><b>Partly delivered</b><span>${got} of ${rolls(o.rolls)}${when[3]?' · '+dt(when[3]):''}</span></li>`:`<li class="${i<=idx?'done':''} ${i===idx&&!part?'now':''}" style="--i:${i}"><span class="d"></span><b>${out&&i===2?'Out for delivery':t}</b><span>${out&&i===2?since(o.status_date):i<=idx&&when[i]?dt(when[i]):(i<=idx?'Done':'Pending')}</span></li>`).join('')}</ol>
   ${o.status==='Partly delivered'?`<p class="note" style="margin-top:14px">${rolls(o.rolls_to_come)} still to come on a next delivery.</p>`:''}</div></section>
  <section class="panel"><div class="panel-h"><h2>Products</h2></div><div class="tbl" style="margin-top:8px"><table>
   <thead><tr><th>Product</th><th class="r">Rolls</th><th class="r hide-sm">Sent</th><th class="r">Meters</th></tr></thead>
