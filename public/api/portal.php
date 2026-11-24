@@ -212,14 +212,17 @@ case 'orders':
     $list[] = $x; }
   out(array('ok' => true, 'orders' => $list, 'requests' => my_requests($u['customer'], $reqs)));
 
-case 'pod':   // the photo of a signed SJ (proof of delivery): only for an SJ of this customer's own orders
+case 'pod':   // the photo of a signed SJ (proof of delivery): only for an SJ on one of this customer's own orders
   $u = need_user(); $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-  $x = q_rows('SELECT nosj, mime, photo FROM ' . E('sj_pod') . ' WHERE id = ? AND deleted = 0', array($id)); if (!$x) bad('No such photo.', 404);
-  $mine = false; foreach (customer_data($u['customer'])['orders'] as $o) foreach ($o['sjs'] as $s2) if ($s2['sj'] === tr($x[0][0])) $mine = true;
+  $x = q_rows('SELECT nosj, mime FROM ' . E('sj_pod') . ' WHERE id = ? AND deleted = 0', array($id)); if (!$x) bad('No such photo.', 404);
+  // One query (is this SJ on an SO of this customer?) instead of loading all their orders for every photo; the photo is read only after.
+  $mine = q_rows('SELECT 1 FROM ' . T('sj_line') . ' j JOIN ' . T('so_head') . ' s ON s.noso = j.noso WHERE j.nosj = ? AND s.kodepelanggan = ? LIMIT 1',
+    array(tr($x[0][0]), $u['customer']));
   if (!$mine) bad('No such photo.', 404);
+  $photo = q_rows('SELECT photo FROM ' . E('sj_pod') . ' WHERE id = ?', array($id));
   while (ob_get_level()) ob_end_clean();
   header('Content-Type: ' . (preg_match('#^image/(jpeg|png)$#', $x[0][1]) ? $x[0][1] : 'image/jpeg')); header('Cache-Control: private, max-age=86400'); header('X-Content-Type-Options: nosniff');
-  echo base64_decode($x[0][2]); exit;
+  echo base64_decode($photo[0][0]); exit;
 
 case 'order':
   $u = need_user(); $d = customer_data($u['customer']);
