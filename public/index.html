@@ -431,7 +431,7 @@ const ID={
  'This request can no longer be changed. Please contact our sales team.':'Permintaan ini tidak bisa diubah lagi. Silakan hubungi tim penjualan kami.','Request not found.':'Permintaan tidak ditemukan.',
  'WAU Order Portal':'Portal Pesanan WAU','CUSTOMER PORTAL':'PORTAL PELANGGAN','WELCOME':'SELAMAT DATANG','CHANGE PASSWORD':'GANTI KATA SANDI',
  'Back to wautama.com':'Kembali ke wautama.com','Sign in':'Masuk','Sign out':'Keluar','Signing in…':'Sedang masuk…',
- 'Request quotes for SIMNU synthetic leather and follow your orders.':'Minta penawaran harga kulit sintetis SIMNU dan pantau pesanan Anda.',
+ 'Request quotes for synthetic leather and follow your orders.':'Minta penawaran harga kulit sintetis dan pantau pesanan Anda.',
  'Email or username':'Email atau nama pengguna','Password':'Kata sandi',
  'Accounts are created by our sales team. Need access or forgot your password? Email':'Akun dibuat oleh tim penjualan kami. Butuh akses atau lupa kata sandi? Email',
  'or call':'atau telepon','and mention':'dan sebutkan','Questions? Email':'Ada pertanyaan? Email',
@@ -582,7 +582,7 @@ const brand=sub=>`<div class="brandrow"><span class="mark">WAU</span><span><b>Wa
 function loginView(){
  const c=S.contact||{};
  return `<div class="login"><div class="login-card"><div class="login-top"><a class="back" href="https://wautama.com">${ic('left')}Back to wautama.com</a>${langBtn()}</div>${brand('CUSTOMER PORTAL')}
-  <div><h1>Sign in</h1><p class="muted" style="margin-top:6px">Request quotes for SIMNU synthetic leather and follow your orders.</p></div>
+  <div><h1>Sign in</h1><p class="muted" style="margin-top:6px">Request quotes for synthetic leather and follow your orders.</p></div>
   <form id="login" class="form" novalidate>
    <label class="f" for="l-email">Email or username<input class="inp" id="l-email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
    <label class="f" for="l-pass">Password<input class="inp" id="l-pass" type="password" autocomplete="current-password" required></label>
