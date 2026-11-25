@@ -19,7 +19,7 @@ Staff manage requests, custom articles and customer logins in **WAU ERP, Sales â
 | `app/` | PHP helpers (`lib.php`, `data.php`), not reachable from the web |
 | `config.example.php` | Copy to `config.php` (git-ignored) and fill in |
 | `check.php` | Setup check: `C:\xampp\php\php.exe C:\wau-portal\check.php` |
-| `deploy/` | Apache site (`apache-portal.conf`) and `update.bat` |
+| `deploy/` | Apache site (`apache-portal.conf`), `update.bat` (update by hand) and `auto-pull.cmd` (automatic updates) |
 
 ## First install on the server
 
@@ -43,8 +43,39 @@ Staff manage requests, custom articles and customer logins in **WAU ERP, Sales â
 
 ## Updating
 
-Push changes to GitHub, then on the server run `C:\wau-portal\deploy\update.bat`.
+Push changes to GitHub. With automatic updates set up (below), the server picks them up within 2 minutes; otherwise run
+`C:\wau-portal\deploy\update.bat` on the server (it also runs `check.php`).
 `config.php` is never in the repository, so an update never touches passwords or settings.
+
+## Automatic updates (auto-pull)
+
+`deploy\auto-pull.cmd` checks GitHub every 2 minutes and, when main has new commits, fast-forwards the server's copy. Nothing else
+is needed after an update: PHP and the page are read from the files. It is the same method as WAU ERP's `tools\auto-pull.cmd`.
+
+**Set up once.** Open **Command Prompt as administrator** on the server, signed in as the Windows user who normally does
+`git pull` (git must find that user's GitHub login or deploy key), and run:
+
+```
+schtasks /Create /TN "WAU portal auto pull" /SC MINUTE /MO 2 /TR "C:\wau-portal\deploy\auto-pull.cmd" /RU "%USERDOMAIN%\%USERNAME%" /RP * /RL LIMITED /F
+```
+
+It asks for that user's Windows password, so it also runs when nobody is signed in to the server.
+Check it once: `schtasks /Run /TN "WAU portal auto pull"`, then look at `C:\wau-portal\deploy\auto-pull.log`
+(empty, or "updated ...", is good).
+
+**When it does not update**
+
+- `NOT updated` in the log: a file on the server was changed by hand, or Apache held a file open. Run `git status` in
+  `C:\wau-portal` and put back what was changed (`git restore <file>`); it carries on by itself at the next run.
+- `fetch failed`: no network, or that Windows user's GitHub login or deploy key no longer works.
+
+After an update that needs a new setting, run `C:\xampp\php\php.exe C:\wau-portal\check.php` once to see what is missing.
+
+**Stop it**
+
+```
+schtasks /Delete /TN "WAU portal auto pull" /F
+```
 
 ## Deploy key (server pulls without a personal password)
 
